@@ -279,7 +279,6 @@ export default function Nodes() {
             <Button className="w-full mt-4">下載節點軟件</Button>
           </CardContent>
         </Card>
-      </div>
 
       {/* 添加節點 Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
