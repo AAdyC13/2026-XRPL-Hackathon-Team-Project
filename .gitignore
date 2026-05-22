@@ -1,4 +1,9 @@
 .vscode/
+node_modules/
+dist/
+client/dist/
+.cursor/
+.cursorignore
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

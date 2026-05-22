@@ -1,0 +1,34 @@
+{
+  "name": "xrpl-hackathon-team-project",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "tsx watch src/index.ts",
+    "dev:client": "npm --workspace client run dev",
+    "build": "tsc -p tsconfig.json && npm --workspace client run build",
+    "start": "node dist/src/index.js",
+    "verify:connection": "tsx scripts/verify-connection.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm --workspace client run typecheck"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "xrpl": "^4.4.0",
+    "xumm-sdk": "^1.11.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
