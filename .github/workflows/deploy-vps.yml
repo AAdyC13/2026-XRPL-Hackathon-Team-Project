@@ -3,7 +3,7 @@ name: Deploy VPS
 on:
   push:
     branches:
-      - vps-deploy
+      - main
   workflow_dispatch:
 
 concurrency:
