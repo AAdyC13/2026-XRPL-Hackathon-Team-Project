@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+.env.*
+.manus-logs
+*.md
+*.pdf
+template.json
+doc/
