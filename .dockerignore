@@ -1,4 +1,5 @@
 node_modules
+client-legacy
 dist
 .env
 .env.*
@@ -7,3 +8,10 @@ dist
 *.pdf
 template.json
 doc/
+docs/
+.git
+.github
+.cursor
+.cursorignore
+npm-debug.log*
+coverage

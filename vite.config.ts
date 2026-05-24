@@ -13,6 +13,13 @@ export default defineConfig({
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
+  server: {
+    port: 5173,
+    proxy: {
+      "/api": "http://localhost:3000",
+      "/health": "http://localhost:3000",
+    },
+  },
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,

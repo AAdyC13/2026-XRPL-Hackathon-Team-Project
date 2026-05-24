@@ -2,7 +2,16 @@
 
 以 **XRP Ledger** 為結算層的校園 GPU 算力共享與 AI 推論平台。結合三條核心產品線：AI 推論服務、算力出租（Escrow 保障）、算力貢獻分潤（XRPL Hooks）。
 
-> **目前為 Mock 模式**：所有資料為靜態 / setTimeout 模擬，後端 API 上線後替換各頁面的 `// TODO` 標記即可。
+> **目前為整合過渡狀態**：新版 UI 仍多為靜態 / setTimeout 模擬；XRPL API 已由 `src/` 後端提供，後續可逐頁替換各頁面的 `// TODO` 標記。
+
+## 部署架構
+
+推送到 `main` 分支時，GitHub Actions 只透過 `deploy-vps.yml` 部署單一 Docker 容器到 VPS。該容器在 `127.0.1.3:3000` 同時提供 Express API 與新版 `client/` 的靜態前端。
+
+- `client/`：新版 GKC 平台 UI，會被 `pnpm run build` 打包到 `dist/public`
+- `src/`：XRPL Express API，production 會 serve `dist/public`
+- `client-legacy/`：舊 XRPL demo client，只作本地參考，不進 Docker build，也不部署到 VPS
+- `3001` 獨立前端部署已停用，不再使用 `/opt/xrpl-frontend`
 
 ---
 
@@ -31,8 +40,13 @@
 # 安裝依賴
 pnpm install
 
-# 開發伺服器（前端 http://localhost:3000）
+# 開發伺服器
+# API: http://localhost:3000
+# 新版前端: http://localhost:5173
 pnpm dev
+
+# 舊 XRPL demo（選用）
+pnpm dev:legacy
 ```
 
 ### 測試帳號（Mock 模式）
@@ -84,7 +98,8 @@ gkc-platform/
 │   │   └── lib/
 │   │       ├── constants.ts       # 路由、AI 模型、節點資料、定價
 │   │       └── utils.ts
-├── server/                        # 靜態檔案伺服器 (Express)
+├── src/                           # XRPL Express API + production 靜態前端託管
+├── client-legacy/                 # 舊 XRPL demo client（不部署）
 ├── shared/                        # 共用型別
 ├── BACKEND_SPECIFICATION.md       # 後端 API 完整規格書
 └── README.md
