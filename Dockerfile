@@ -29,10 +29,12 @@ RUN pnpm install --frozen-lockfile
 
 COPY prisma.config.ts ./prisma.config.ts
 COPY prisma ./prisma
+COPY src/prisma ./src/prisma
 COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 COPY --from=builder /app/dist ./dist
 
-RUN chmod +x ./scripts/docker-entrypoint.sh \
+RUN sed -i 's/\r$//' ./scripts/docker-entrypoint.sh \
+  && chmod +x ./scripts/docker-entrypoint.sh \
   && pnpm prisma generate \
   && chown -R node:node /app
 
