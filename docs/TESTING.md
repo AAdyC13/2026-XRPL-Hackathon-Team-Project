@@ -61,9 +61,10 @@ corepack pnpm test:ci
 ## 測試資料策略
 
 - 每個 API spec 在 `beforeEach` 清理 `users` 表並重建 demo user。
-- demo user 與 seed 對齊：
+- demo user 與 production seed `001_demo_user` 對齊：
   - Email: `demo@gkc.edu.tw`
   - Password: `Demo12345678`
+- 版本化 bootstrap seed 說明見 [DATABASE.md](./DATABASE.md)。
 
 ## CI 規範
 

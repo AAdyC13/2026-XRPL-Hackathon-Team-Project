@@ -18,12 +18,13 @@ describe("GET /health", () => {
     await appContext.app.close();
   });
 
-  it("returns service ok and mock xrpl connected", async () => {
+  it("returns service ok with database and mock xrpl", async () => {
     const response = await appContext.http.get("/health").expect(200);
-    expect(response.body).toEqual({
+    expect(response.body).toMatchObject({
       ok: true,
       data: {
         service: "ok",
+        database: "ok",
         xrpl: "connected"
       }
     });

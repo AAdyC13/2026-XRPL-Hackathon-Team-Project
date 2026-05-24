@@ -2,7 +2,7 @@
 
 以 **XRP Ledger** 為結算層的校園 GPU 算力共享與 AI 推論平台。結合三條核心產品線：AI 推論服務、算力出租（Escrow 保障）、算力貢獻分潤（XRPL Hooks）。
 
-> **目前為整合過渡狀態**：新版 UI 仍多為靜態 / setTimeout 模擬；XRPL API 已由 `src/` 後端提供，後續可逐頁替換各頁面的 `// TODO` 標記。
+> **整合狀態**：登入／註冊、錢包餘額與 TrustLine 已接後端 API；部署時自動 `migrate` + 版本化 `seed`（見 [docs/DATABASE.md](./docs/DATABASE.md)）。AI 推論、Payment Channel、節點等仍待 Phase 2+ API。
 
 ## 部署架構
 
@@ -40,8 +40,13 @@
 # 安裝依賴
 pnpm install
 
-# 啟動測試資料庫（測試前建議）
+# 啟動 PostgreSQL
 docker compose up -d postgres
+
+# 環境變數與資料庫（首次）
+cp .env.example .env
+pnpm db:migrate
+pnpm db:seed
 
 # 開發伺服器
 # API: http://localhost:3000
@@ -61,6 +66,8 @@ pnpm test
 |------|-----|
 | Email | `demo@gkc.edu.tw` |
 | 密碼 | `Demo12345678` |
+
+> 由 `pnpm db:seed` 寫入（`001_demo_user`）。生產環境部署時容器會自動執行 migrate + seed，詳見 [docs/DATABASE.md](./docs/DATABASE.md)。
 
 ---
 

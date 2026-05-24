@@ -24,42 +24,12 @@ interface InferenceResult {
   txHash: string;
 }
 
-const SAMPLE_RESULTS: InferenceResult[] = [
-  {
-    id: '1',
-    model: 'Llama 2 7B',
-    prompt: '解釋什麼是區塊鏈',
-    output:
-      '區塊鏈是一種分散式帳本技術，由多個區塊組成，每個區塊包含一組交易記錄。區塊通過密碼學哈希連接，形成一條不可篡改的鏈條...',
-    inputTokens: 15,
-    outputTokens: 85,
-    cost: 0.1,
-    timestamp: new Date(Date.now() - 3600000),
-    txHash: 'E2E519ABC8F1D4C3B7A9E6F2D5C8B1A4E7F3D9C6B2A8E5F1D4C7B3A9E6F2D8C5',
-  },
-  {
-    id: '2',
-    model: 'Qwen 7B',
-    prompt: '用中文寫一首關於 AI 的詩',
-    output:
-      '智慧之光照亮夜\
-機器學習展翅飛\
-數據流動如江河\
-未來在我們手指尖...',
-    inputTokens: 18,
-    outputTokens: 42,
-    cost: 0.06,
-    timestamp: new Date(Date.now() - 7200000),
-    txHash: 'A3F7B2C9E6D4B1A8F5C2E9D6B3A7F4C1E8D5B2A9F6C3E7D4B1A8F5C9E6D3B7A4',
-  },
-];
-
 export default function AIInference() {
   const { user } = useAuth();
   const [selectedModel, setSelectedModel] = useState(AI_MODELS[0].id);
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<InferenceResult[]>(SAMPLE_RESULTS);
+  const [results, setResults] = useState<InferenceResult[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const selectedModelData = AI_MODELS.find((m) => m.id === selectedModel)!;
@@ -71,24 +41,13 @@ export default function AIInference() {
     }
 
     setIsLoading(true);
-    // 模擬 API 調用
-    setTimeout(() => {
-      const newResult: InferenceResult = {
-        id: Date.now().toString(),
-        model: selectedModelData.name,
-        prompt,
-        output: '這是一個模擬的推論結果。在實際應用中，這裡會顯示 AI 模型的真實輸出...',
-        inputTokens: Math.floor(prompt.length / 4),
-        outputTokens: 150,
-        cost: (Math.floor(prompt.length / 4) + 150) * (selectedModelData.costPer1kTokens / 1000),
-        timestamp: new Date(),
-        txHash: Array.from({ length: 64 }, () => '0123456789ABCDEF'[Math.floor(Math.random() * 16)]).join(''),
-      };
-      setResults([newResult, ...results]);
+    try {
+      toast.info('AI 推論 API 尚未上線（Phase 2：POST /api/v1/inference）');
+      setResults([]);
       setPrompt('');
+    } finally {
       setIsLoading(false);
-      toast.success('推論完成！');
-    }, 2000);
+    }
   };
 
   const copyToClipboard = (text: string, id: string) => {

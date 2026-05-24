@@ -33,4 +33,4 @@ COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 USER node
-CMD ["sh", "-c", "pnpm db:deploy && node dist/src/main.js"]
+CMD ["sh", "-c", "pnpm db:deploy && pnpm db:seed && node dist/src/main.js"]

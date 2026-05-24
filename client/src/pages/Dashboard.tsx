@@ -1,9 +1,9 @@
 ﻿import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { SAMPLE_GPU_NODES, PRICING } from '@/lib/constants';
-import { ArrowUpRight, ArrowDownLeft, TrendingUp, Zap, Activity } from 'lucide-react';
+import { SAMPLE_GPU_NODES } from '@/lib/constants';
+import { useAuth } from '@/contexts/AuthContext';
+import { ArrowUpRight, ArrowDownLeft, Zap, Activity } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // 示例數據
@@ -28,40 +28,46 @@ const revenueData = [
 ];
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const gkcDisplay = user?.gkcBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? '—';
+  const xrpDisplay = user?.xrpBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? '—';
+
   return (
     <Layout>
       <div className="p-8 space-y-8">
         {/* 頁面標題 */}
         <div>
           <h1 className="text-3xl font-display font-bold">儀表板</h1>
-          <p className="text-muted-foreground mt-2">監控您的 AI 推論使用情況與算力貢獻收益</p>
+          <p className="text-muted-foreground mt-2">
+            錢包餘額來自後端帳號；圖表與節點統計待 Phase 2+ API
+          </p>
         </div>
 
         {/* 統計卡片網格 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="本月花費"
-            value="2,450.50"
+            title="GKC 餘額"
+            value={gkcDisplay}
             unit="GKC"
             icon={<ArrowDownLeft className="w-5 h-5" />}
-            trend="-12%"
-            trendDirection="down"
+            trend="即時（/auth/me）"
+            trendDirection="neutral"
           />
           <StatCard
-            title="推論次數"
-            value="1,284"
-            unit="次"
+            title="XRP 餘額"
+            value={xrpDisplay}
+            unit="XRP"
             icon={<Zap className="w-5 h-5" />}
-            trend="+23%"
-            trendDirection="up"
+            trend="即時（/auth/me）"
+            trendDirection="neutral"
           />
           <StatCard
             title="本月收益"
-            value="1,156.75"
+            value="—"
             unit="GKC"
             icon={<ArrowUpRight className="w-5 h-5" />}
-            trend="+8%"
-            trendDirection="up"
+            trend="待統計 API"
+            trendDirection="neutral"
           />
           <StatCard
             title="活躍節點"
@@ -79,7 +85,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle>今日使用趨勢</CardTitle>
-              <CardDescription>Token 使用量與成本變化</CardDescription>
+              <CardDescription>示例圖表 — 待 /api/v1/stats（Phase 2+）</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>

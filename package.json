@@ -15,7 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:api": "vitest run test/api/health.api.spec.ts test/api/auth.api.spec.ts test/api/wallet.api.spec.ts",
-    "test:unit": "vitest run test/unit/auth.service.spec.ts",
+    "test:unit": "vitest run test/unit/",
     "test:ci": "vitest run --reporter=verbose",
     "db:migrate": "corepack pnpm prisma migrate dev",
     "db:deploy": "corepack pnpm prisma migrate deploy",
