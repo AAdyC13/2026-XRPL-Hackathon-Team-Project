@@ -25,7 +25,8 @@ const __dirname = path.dirname(__filename);
     ]),
     ServeStaticModule.forRoot({
       rootPath: path.resolve(__dirname, "..", "dist", "public"),
-      exclude: ["/api*", "/health"]
+      // Express 5 / path-to-regexp v8: wildcards must be named (e.g. /api/*path) or use a group.
+      exclude: ["/api/(.*)", "/health"]
     }),
     PrismaModule,
     UsersModule,
