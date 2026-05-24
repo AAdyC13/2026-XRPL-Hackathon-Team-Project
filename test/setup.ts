@@ -2,10 +2,8 @@ import dotenv from "dotenv";
 import { vi } from "vitest";
 import { MOCK_XRPL_BALANCE } from "./mocks/xrpl.js";
 
+dotenv.config({ path: ".env.test.example" });
 dotenv.config({ path: ".env.test", override: true });
-if (!process.env.DATABASE_URL) {
-  dotenv.config({ path: ".env.test.example", override: true });
-}
 process.env.NODE_ENV = "test";
 
 vi.mock("../src/xrpl/infrastructure/xrpl.client.js", async () => {

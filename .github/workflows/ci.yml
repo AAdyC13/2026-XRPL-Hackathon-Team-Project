@@ -33,6 +33,9 @@ jobs:
       DATABASE_URL: postgresql://gkc:gkc@localhost:5432/gkc_platform_test
       JWT_SECRET: minimum_32_character_random_secret_for_tests_only
       JWT_EXPIRES_IN: "86400"
+      ISSUER_ADDRESS: rTEST_ISSUER_ADDRESS
+      CURRENCY_CODE: GKC
+      DEFAULT_TRUST_LIMIT: "1000000"
 
     steps:
       - name: Checkout
