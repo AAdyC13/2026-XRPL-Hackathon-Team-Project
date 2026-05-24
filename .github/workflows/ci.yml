@@ -38,26 +38,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Install dependencies
-        run: corepack pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: corepack pnpm prisma generate
+        run: pnpm prisma generate
 
       - name: Apply database migrations
-        run: corepack pnpm db:deploy
+        run: pnpm db:deploy
 
       - name: Type check backend
-        run: corepack pnpm check:backend
+        run: pnpm check:backend
 
       - name: Run tests
-        run: corepack pnpm test:ci
+        run: pnpm test:ci
