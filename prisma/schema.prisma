@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  username     String   @unique @db.VarChar(64)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  xrpAddress   String?  @map("xrp_address") @db.VarChar(64)
+  gkcBalance   Decimal  @default(0) @map("gkc_balance") @db.Decimal(20, 8)
+  xrpBalance   Decimal  @default(0) @map("xrp_balance") @db.Decimal(20, 8)
+  role         String   @default("user") @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}

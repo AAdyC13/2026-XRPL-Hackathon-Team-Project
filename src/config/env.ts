@@ -5,10 +5,14 @@ dotenv.config();
 
 const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
+  DATABASE_URL: z.string().min(1).default("postgresql://gkc:gkc@localhost:5432/gkc_platform"),
+  REDIS_URL: z.string().optional(),
+  JWT_SECRET: z.string().min(32).default("minimum_32_character_random_secret_for_dev"),
+  JWT_EXPIRES_IN: z.string().default("86400"),
   XRPL_WS_URL: z.string().url().default("wss://s.altnet.rippletest.net:51233"),
   ISSUER_ADDRESS: z.string().optional(),
   ISSUER_SEED: z.string().optional(),
-  CURRENCY_CODE: z.string().min(3).max(40).default("ACU"),
+  CURRENCY_CODE: z.string().min(3).max(40).default("GKC"),
   DEFAULT_TRUST_LIMIT: z.string().default("1000000"),
   XUMM_API_KEY: z.string().optional(),
   XUMM_API_SECRET: z.string().optional(),

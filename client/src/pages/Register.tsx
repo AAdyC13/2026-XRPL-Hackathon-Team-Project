@@ -94,7 +94,7 @@ export default function Register() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="至少 8 個字元"
+                    placeholder="至少 8 個字元，含大小寫與數字"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"

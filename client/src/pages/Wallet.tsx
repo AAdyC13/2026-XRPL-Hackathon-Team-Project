@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Copy, Send, ArrowUpRight, ArrowDownLeft, ExternalLink, ShieldCheck, Link2, Plus, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiFetch, apiPost } from '@/hooks/api';
 
 // GKC Issuer 地址 (XRPL Testnet)
 const GKC_ISSUER = 'rGKCPlatformIssuer7aXD9Fz3mQtY2vBnC5';
@@ -57,28 +58,26 @@ const TRANSACTIONS = [
   },
 ];
 
-// Mock Payment Channel data
-const MOCK_CHANNELS = [
-  {
-    id: 'ch-001',
-    channelId: '3E519ABC8F1D4C3B7A9E6F2D5C8B1A4E7F3D9C6B',
-    lockedXrp: 50,
-    consumedXrp: 12.3,
-    status: 'open' as const,
-    expiration: new Date(Date.now() + 86400000 * 7),
-  },
-];
+type PaymentChannelRow = {
+  id: string;
+  channelId: string;
+  lockedXrp: number;
+  consumedXrp: number;
+  status: 'open' | 'closing';
+  expiration: Date;
+};
 
 export default function Wallet() {
-  const { user } = useAuth();
-  const xrpAddress = user?.xrpAddress ?? 'rN7n7otQDd6FczFgLdlqtyMVrn3Rqq5Q1';
-  const gkcBalance = user?.gkcBalance ?? 2847.52;
-  const xrpBalance = user?.xrpBalance ?? 128.50;
+  const { user, token, updateBalance } = useAuth();
+  const [xrpAddress, setXrpAddress] = useState(user?.xrpAddress ?? '');
+  const [gkcBalance, setGkcBalance] = useState(user?.gkcBalance ?? 0);
+  const [xrpBalance, setXrpBalance] = useState(user?.xrpBalance ?? 0);
+  const [walletLoading, setWalletLoading] = useState(true);
 
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
-  const [trustlineSet] = useState(true); // TODO: 從後端查詢實際狀態
-  const [channels, setChannels] = useState(MOCK_CHANNELS);
-  const [isOpeningChannel, setIsOpeningChannel] = useState(false);
+  const [trustlineSet, setTrustlineSet] = useState(false);
+  const [channels, setChannels] = useState<PaymentChannelRow[]>([]);
+  const [isSettingTrustline, setIsSettingTrustline] = useState(false);
 
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
@@ -87,28 +86,56 @@ export default function Wallet() {
     toast.success('已複製到剪貼板');
   };
 
-  const handleOpenChannel = async () => {
-    setIsOpeningChannel(true);
-    // TODO: 替換為真實 API 呼叫 — POST /api/v1/payment-channel/open
-    await new Promise((r) => setTimeout(r, 1200));
-    const newChannel = {
-      id: 'ch-' + Date.now(),
-      channelId: Array.from({ length: 40 }, () => '0123456789ABCDEF'[Math.floor(Math.random() * 16)]).join(''),
-      lockedXrp: 20,
-      consumedXrp: 0,
-      status: 'open' as const,
-      expiration: new Date(Date.now() + 86400000 * 7),
-    };
-    setChannels((prev) => [...prev, newChannel]);
-    setIsOpeningChannel(false);
-    toast.success('Payment Channel 已開啟，鎖定 20 XRP');
+  const handleSetupTrustline = async () => {
+    if (!token) return;
+    setIsSettingTrustline(true);
+    try {
+      const response = await apiPost<{ txjson: unknown }>(
+        '/api/v1/wallet/trustline',
+        { limit: '1000000', signWithXaman: false },
+        { token }
+      );
+      toast.success('TrustLine 交易已準備，請使用 XRPL 錢包簽署並提交', {
+        description: response.txjson ? 'txjson 已從後端取得' : undefined,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '設定 TrustLine 失敗');
+    } finally {
+      setIsSettingTrustline(false);
+    }
   };
 
-  const handleCloseChannel = (id: string) => {
-    // TODO: 替換為真實 API 呼叫 — POST /api/v1/payment-channel/close
-    setChannels((prev) => prev.filter((c) => c.id !== id));
-    toast.success('通道已關閉，未消費的 XRP 已退回');
-  };
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchWalletData = async () => {
+      setWalletLoading(true);
+      try {
+        const wallet = await apiFetch<{
+          gkc_balance: number;
+          xrp_balance: number;
+          xrp_address: string | null;
+          payment_channel: unknown;
+        }>('/api/v1/wallet', { token });
+        const balance = await apiFetch<{
+          lines: Array<{ currency: string }>;
+        }>('/api/v1/wallet/balance', { token });
+
+        setGkcBalance(wallet.gkc_balance);
+        setXrpBalance(wallet.xrp_balance);
+        setXrpAddress(wallet.xrp_address ?? user?.xrpAddress ?? '');
+        updateBalance(wallet.gkc_balance, wallet.xrp_balance);
+        setTrustlineSet(balance.lines.some((line) => line.currency === 'GKC'));
+        setChannels([]);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : '讀取錢包資料失敗');
+      } finally {
+        setWalletLoading(false);
+      }
+    };
+
+    fetchWalletData();
+  }, [token, updateBalance, user?.xrpAddress]);
 
   return (
     <Layout>
@@ -145,8 +172,13 @@ export default function Wallet() {
                 </div>
               </div>
               {!trustlineSet && (
-                <Button size="sm" variant="outline">
-                  設定 TrustLine
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSetupTrustline}
+                  disabled={isSettingTrustline || walletLoading}
+                >
+                  {isSettingTrustline ? '準備中…' : '設定 TrustLine'}
                 </Button>
               )}
             </div>
@@ -340,22 +372,18 @@ export default function Wallet() {
                 size="sm"
                 variant="outline"
                 className="gap-2"
-                onClick={handleOpenChannel}
-                disabled={isOpeningChannel}
+                disabled
+                title="Phase 2：Payment Channel API"
               >
-                {isOpeningChannel ? (
-                  <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Plus className="w-4 h-4" />
-                )}
-                開啟新通道
+                <Plus className="w-4 h-4" />
+                開啟新通道（即將推出）
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {channels.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">
-                尚無開啟的 Payment Channel
+                尚無開啟的 Payment Channel（Phase 2 API 上線後將從後端載入）
               </p>
             ) : (
               <div className="space-y-3">
@@ -379,8 +407,9 @@ export default function Wallet() {
                         </a>
                       </div>
                       <button
-                        onClick={() => handleCloseChannel(ch.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        type="button"
+                        className="text-muted-foreground opacity-50 cursor-not-allowed"
+                        aria-disabled
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -413,7 +442,7 @@ export default function Wallet() {
         <Card>
           <CardHeader>
             <CardTitle>交易歷史</CardTitle>
-            <CardDescription>所有錢包交易記錄</CardDescription>
+            <CardDescription>示例 UI — 交易 API（Phase 2+）上線後改為後端資料</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="all" className="w-full">

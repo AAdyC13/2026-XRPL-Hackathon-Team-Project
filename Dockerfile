@@ -7,7 +7,8 @@ COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 RUN pnpm install --frozen-lockfile
 
-COPY tsconfig.backend.json tsconfig.json tsconfig.node.json vite.config.ts components.json ./
+COPY nest-cli.json prisma.config.ts tsconfig.backend.json tsconfig.json tsconfig.node.json vite.config.ts components.json ./
+COPY prisma ./prisma
 COPY src ./src
 COPY scripts ./scripts
 COPY client ./client
@@ -24,10 +25,12 @@ RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 
 COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile
 
+COPY prisma.config.ts ./prisma.config.ts
+COPY prisma ./prisma
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 USER node
-CMD ["node", "dist/src/index.js"]
+CMD ["sh", "-c", "pnpm db:deploy && pnpm db:seed && node dist/src/main.js"]
