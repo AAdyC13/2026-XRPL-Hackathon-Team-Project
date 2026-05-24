@@ -6,7 +6,7 @@
 
 ## 部署架構
 
-推送到 `main` 分支時，GitHub Actions 只透過 `deploy-vps.yml` 部署單一 Docker 容器到 VPS。該容器在 `127.0.1.3:3000` 同時提供 Express API 與新版 `client/` 的靜態前端。
+推送到 `main` 分支時，GitHub Actions 透過 `deploy-vps.yml` 建置映像並以 `docker compose --env-file deploy.env` 部署到 VPS（`127.0.1.3:3000`：Nest API + 新版 `client/` 靜態檔）。伺服器 `.env` 的 `DATABASE_URL` / `REDIS_URL` 請用 Compose 服務名 `postgres` / `redis`，見 [docs/DATABASE.md](docs/DATABASE.md)。
 
 - `client/`：新版 GKC 平台 UI，會被 `pnpm run build` 打包到 `dist/public`
 - `src/`：XRPL Express API，production 會 serve `dist/public`

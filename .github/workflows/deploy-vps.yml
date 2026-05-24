@@ -167,4 +167,4 @@ jobs:
           # shellcheck disable=SC2029
           printf '%s' "$GHCR_TOKEN" | ssh vps "docker login ghcr.io -u '${GHCR_USERNAME}' --password-stdin"
           # shellcheck disable=SC2029
-          ssh vps "cd '${DEPLOY_DIR}' && docker compose --env-file deploy.env pull && docker compose --env-file deploy.env up -d --remove-orphans && docker image prune -f && docker logout ghcr.io"
+          ssh vps "rm -f '${DEPLOY_DIR}/docker-compose.override.yml' && cd '${DEPLOY_DIR}' && docker compose --env-file deploy.env pull && docker compose --env-file deploy.env up -d --remove-orphans && docker image prune -f && docker logout ghcr.io"

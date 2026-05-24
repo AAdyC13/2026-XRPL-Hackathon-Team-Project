@@ -9,7 +9,7 @@ pnpm db:migrate          # local dev: create + apply
 pnpm db:deploy           # CI / production: apply pending only
 ```
 
-On VPS, the app container runs `db:deploy` before start (see `Dockerfile`).
+On VPS, the app container runs `db:deploy` then `db:seed` before start (see `scripts/docker-entrypoint.sh`). The production image runs `prisma generate` at **build time** and `chown`s `/app` to the `node` user so migrate/seed do not fail on read-only `node_modules`.
 
 ## Bootstrap data (users, reference rows)
 
