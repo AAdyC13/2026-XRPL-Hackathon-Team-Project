@@ -24,9 +24,9 @@ const __dirname = path.dirname(__filename);
       }
     ]),
     ServeStaticModule.forRoot({
-      rootPath: path.resolve(__dirname, "..", "dist", "public"),
-      // Express 5 / path-to-regexp v8: wildcards must be named (e.g. /api/*path) or use a group.
-      exclude: ["/api/(.*)", "/health"]
+      rootPath: path.resolve(__dirname, "..", "public"),
+      // path-to-regexp v8 (Nest serve-static): use named brace wildcards — see nest sample 24-serve-static.
+      exclude: ["/api/{*path}", "/health"]
     }),
     PrismaModule,
     UsersModule,
