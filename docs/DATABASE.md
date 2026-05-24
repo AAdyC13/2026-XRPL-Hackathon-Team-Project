@@ -23,7 +23,7 @@ Use **versioned seeds** under `prisma/seeds/`. Each seed has a stable id (`001_d
 pnpm db:seed
 ```
 
-Production: `Dockerfile` runs `db:seed` after `db:deploy` on each container start.
+Production: `scripts/docker-entrypoint.sh` runs `db:seed` after `db:deploy` on each container start. Seeds use the same Prisma 7 driver adapter as the Nest app (`src/prisma/create-prisma-client.ts`).
 
 ### Built-in seeds
 

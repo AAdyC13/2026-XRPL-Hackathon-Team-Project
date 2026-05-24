@@ -1,12 +1,18 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
 import { seeds } from "./seeds/index.js";
 import { runVersionedSeeds } from "./seeds/runner.js";
+import { createPrismaClient, disconnectPrismaClient } from "../src/prisma/create-prisma-client.js";
 
-const prisma = new PrismaClient();
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  console.error("DATABASE_URL is required to run seeds.");
+  process.exit(1);
+}
+
+const bundle = createPrismaClient(databaseUrl);
 
 async function main() {
-  await runVersionedSeeds(prisma, seeds);
+  await runVersionedSeeds(bundle.prisma, seeds);
 }
 
 main()
@@ -15,5 +21,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await disconnectPrismaClient(bundle);
   });
