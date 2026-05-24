@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - backend
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Check and test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: gkc
+          POSTGRES_PASSWORD: gkc
+          POSTGRES_DB: gkc_platform_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gkc -d gkc_platform_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://gkc:gkc@localhost:5432/gkc_platform_test
+      JWT_SECRET: minimum_32_character_random_secret_for_tests_only
+      JWT_EXPIRES_IN: "86400"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: corepack pnpm prisma generate
+
+      - name: Apply database migrations
+        run: corepack pnpm db:deploy
+
+      - name: Type check backend
+        run: corepack pnpm check:backend
+
+      - name: Run tests
+        run: corepack pnpm test:ci

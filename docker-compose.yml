@@ -1,8 +1,36 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gkc
+      POSTGRES_PASSWORD: gkc
+      POSTGRES_DB: gkc_platform
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gkc -d gkc_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
   app:
     image: ghcr.io/aadyc13/2026-xrpl-hackathon-team-project:${IMAGE_TAG:-latest}
     env_file:
       - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     ports:
       - "127.0.1.3:3000:3000"
     restart: unless-stopped
@@ -16,3 +44,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
+
+volumes:
+  pgdata:

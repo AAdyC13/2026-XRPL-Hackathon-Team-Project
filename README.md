@@ -40,6 +40,9 @@
 # 安裝依賴
 pnpm install
 
+# 啟動測試資料庫（測試前建議）
+docker compose up -d postgres
+
 # 開發伺服器
 # API: http://localhost:3000
 # 新版前端: http://localhost:5173
@@ -47,13 +50,17 @@ pnpm dev
 
 # 舊 XRPL demo（選用）
 pnpm dev:legacy
+
+# 自動化測試
+cp .env.test.example .env.test
+pnpm test
 ```
 
-### 測試帳號（Mock 模式）
+### 測試帳號
 | 欄位 | 值 |
 |------|-----|
 | Email | `demo@gkc.edu.tw` |
-| 密碼 | `demo12345678` |
+| 密碼 | `Demo12345678` |
 
 ---
 
@@ -68,7 +75,7 @@ pnpm dev:legacy
 | 路由 | wouter v3（已 patch）|
 | 圖表 | recharts |
 | 通知 | sonner |
-| 後端（待實作）| Node.js 20 + Express + PostgreSQL + Redis |
+| 後端框架 | NestJS 11 + Prisma 7 + PostgreSQL + Redis |
 | XRPL SDK | xrpl.js 3.x |
 | AI 推論 | Ollama / vLLM |
 
@@ -98,7 +105,7 @@ gkc-platform/
 │   │   └── lib/
 │   │       ├── constants.ts       # 路由、AI 模型、節點資料、定價
 │   │       └── utils.ts
-├── src/                           # XRPL Express API + production 靜態前端託管
+├── src/                           # NestJS API + production 靜態前端託管
 ├── client-legacy/                 # 舊 XRPL demo client（不部署）
 ├── shared/                        # 共用型別
 ├── BACKEND_SPECIFICATION.md       # 後端 API 完整規格書
@@ -127,17 +134,17 @@ gkc-platform/
 
 ### 🔴 Phase 1 — 基礎架構（第 1-2 週）
 
-- [ ] 建立 PostgreSQL + Redis 環境（Docker Compose）
-- [ ] **Auth API**
-  - [ ] `POST /api/v1/auth/register` — 用戶註冊（bcrypt 雜湊）
-  - [ ] `POST /api/v1/auth/login` — 登入取得 JWT
-  - [ ] JWT 驗證中間件（保護所有受保護路由）
-  - [ ] 輸入驗證（zod）、速率限制（express-rate-limit）
-- [ ] **XRPL 基礎整合**
-  - [ ] xrpl.js 客戶端初始化，連接 Testnet WebSocket
-  - [ ] GKC IOU Issuer 帳戶設定與鑰匙管理
-  - [ ] `POST /api/v1/wallet/trustline` — 發送 TrustSet 交易
-  - [ ] `GET /api/v1/wallet/balance` — 查詢 GKC / XRP 餘額
+- [x] 建立 PostgreSQL + Redis 環境（Docker Compose）
+- [x] **Auth API**
+  - [x] `POST /api/v1/auth/register` — 用戶註冊（bcrypt 雜湊）
+  - [x] `POST /api/v1/auth/login` — 登入取得 JWT
+  - [x] `GET /api/v1/auth/me` — JWT 驗證中間件（保護受保護路由）
+  - [x] 輸入驗證（zod）、速率限制（Nest Throttler）
+- [x] **XRPL 基礎整合**
+  - [x] xrpl.js 客戶端初始化，連接 Testnet WebSocket
+  - [x] GKC IOU Issuer 帳戶設定與鑰匙管理
+  - [x] `POST /api/v1/wallet/trustline` — 發送 TrustSet 交易（prepare）
+  - [x] `GET /api/v1/wallet/balance` — 查詢 GKC / XRP 餘額
 
 ### 🔴 Phase 2 — AI 推論 + Payment Channel（第 2-3 週）
 
@@ -210,7 +217,7 @@ gkc-platform/
 - [ ] **DevOps**
   - [ ] Docker Compose（後端 + PostgreSQL + Redis + Ollama）
   - [ ] Nginx 反向代理 + SSL
-  - [ ] GitHub Actions CI/CD（pnpm check + 測試 + 部署）
+  - [x] GitHub Actions CI/CD（`check:backend` + 測試 + 部署 gate；見 [`docs/TESTING.md`](./docs/TESTING.md)）
 
 ---
 

@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Copy, Send, ArrowUpRight, ArrowDownLeft, ExternalLink, ShieldCheck, Link2, Plus, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiFetch } from '@/hooks/api';
 
 // GKC Issuer 地址 (XRPL Testnet)
 const GKC_ISSUER = 'rGKCPlatformIssuer7aXD9Fz3mQtY2vBnC5';
@@ -70,13 +71,13 @@ const MOCK_CHANNELS = [
 ];
 
 export default function Wallet() {
-  const { user } = useAuth();
-  const xrpAddress = user?.xrpAddress ?? 'rN7n7otQDd6FczFgLdlqtyMVrn3Rqq5Q1';
-  const gkcBalance = user?.gkcBalance ?? 2847.52;
-  const xrpBalance = user?.xrpBalance ?? 128.50;
+  const { user, token, updateBalance } = useAuth();
+  const [xrpAddress, setXrpAddress] = useState(user?.xrpAddress ?? 'rN7n7otQDd6FczFgLdlqtyMVrn3Rqq5Q1');
+  const [gkcBalance, setGkcBalance] = useState(user?.gkcBalance ?? 2847.52);
+  const [xrpBalance, setXrpBalance] = useState(user?.xrpBalance ?? 128.5);
 
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
-  const [trustlineSet] = useState(true); // TODO: 從後端查詢實際狀態
+  const [trustlineSet, setTrustlineSet] = useState(true);
   const [channels, setChannels] = useState(MOCK_CHANNELS);
   const [isOpeningChannel, setIsOpeningChannel] = useState(false);
 
@@ -109,6 +110,33 @@ export default function Wallet() {
     setChannels((prev) => prev.filter((c) => c.id !== id));
     toast.success('通道已關閉，未消費的 XRP 已退回');
   };
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchWalletData = async () => {
+      try {
+        const wallet = await apiFetch<{
+          gkc_balance: number;
+          xrp_balance: number;
+          xrp_address: string | null;
+        }>('/api/v1/wallet', { token });
+        const balance = await apiFetch<{
+          lines: Array<{ currency: string }>;
+        }>('/api/v1/wallet/balance', { token });
+
+        setGkcBalance(wallet.gkc_balance);
+        setXrpBalance(wallet.xrp_balance);
+        setXrpAddress(wallet.xrp_address ?? user?.xrpAddress ?? 'rN7n7otQDd6FczFgLdlqtyMVrn3Rqq5Q1');
+        updateBalance(wallet.gkc_balance, wallet.xrp_balance);
+        setTrustlineSet(balance.lines.some((line) => line.currency === 'GKC'));
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : '讀取錢包資料失敗');
+      }
+    };
+
+    fetchWalletData();
+  }, [token, updateBalance, user?.xrpAddress]);
 
   return (
     <Layout>
