@@ -10,7 +10,7 @@ import { Zap, Mail, Lock } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('demo@gkc.edu.tw');
-  const [password, setPassword] = useState('Demo12345678');
+  const [password, setPassword] = useState('password123');
   const [isLoading, setIsLoading] = useState(false);
   const { login, user } = useAuth();
   const [, navigate] = useLocation();
