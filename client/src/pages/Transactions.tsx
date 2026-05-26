@@ -5,73 +5,46 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowUpRight, ArrowDownLeft, Send, Zap, Search, Download, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
-const ALL_TRANSACTIONS = [
-  {
-    id: '1',
-    type: 'inference',
-    amount: 0.15,
-    currency: 'GKC',
-    description: 'AI 推論 - Llama 2 7B',
-    status: 'confirmed',
-    timestamp: new Date(Date.now() - 3600000),
-    txHash: 'E2E519ABC8F1D4C3B7A9E6F2D5C8B1A4E7F3D9C6B2A8E5F1D4C7B3A9E6F2D8C5',
-  },
-  {
-    id: '2',
-    type: 'reward',
-    amount: 125.5,
-    currency: 'GKC',
-    description: '算力貢獻收益',
-    status: 'confirmed',
-    timestamp: new Date(Date.now() - 7200000),
-    txHash: 'A3F7B2C9E6D4B1A8F5C2E9D6B3A7F4C1E8D5B2A9F6C3E7D4B1A8F5C9E6D3B7A4',
-  },
-  {
-    id: '3',
-    type: 'transfer',
-    amount: 500,
-    currency: 'GKC',
-    description: '轉賬至外部錢包',
-    status: 'confirmed',
-    timestamp: new Date(Date.now() - 86400000),
-    txHash: 'F9E2C1D8B5A4E7F3D9C6B2A1E8F5D4C7B3A9E6F2D5C8B1A7E4F3D9C6B2A8E5F1',
-  },
-  {
-    id: '4',
-    type: 'swap',
-    amount: 100,
-    currency: 'XRP',
-    description: 'GKC 兌換 XRP',
-    status: 'confirmed',
-    timestamp: new Date(Date.now() - 172800000),
-    txHash: 'B5D8A4F1C7E9D3B2A6F5C1E8D4B7A3F9C6E2D5B1A8F4C7E3D9B6A2F5C8E1D4B3',
-  },
-  {
-    id: '5',
-    type: 'inference',
-    amount: 0.28,
-    currency: 'GKC',
-    description: 'AI 推論 - Qwen 7B',
-    status: 'pending',
-    timestamp: new Date(Date.now() - 300000),
-    txHash: 'C7F3E1D9B4A6F2C5E8D1B7A4F3C9E6D2B5A8F1C4E7D3B9A2F6C5E8D4B1A7F3C2',
-  },
-  {
-    id: '6',
-    type: 'reward',
-    amount: 85.3,
-    currency: 'GKC',
-    description: '算力貢獻收益',
-    status: 'confirmed',
-    timestamp: new Date(Date.now() - 259200000),
-    txHash: 'D1A8C5F2E7D3B9A4F6C1E8D5B2A7F4C9E3D6B1A5F8C2E7D4B3A9F5C1E8D6B2A4',
-  },
-];
+interface TxRow {
+  id: string;
+  type: string;
+  amount_gkc: number;
+  balance_after: number;
+  reference_id: string | null;
+  tx_hash: string | null;
+  description: string;
+  created_at: string;
+}
 
 export default function Transactions() {
+  const { token } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [txRows, setTxRows] = useState<TxRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch('/api/v1/wallet/transactions?limit=100', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then((data: { transactions: TxRow[] }) => setTxRows(data.transactions ?? []))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  const ALL_TRANSACTIONS = txRows.map(r => ({
+    id: r.id,
+    type: r.type,
+    amount: r.amount_gkc,
+    currency: 'GKC',
+    description: r.description,
+    status: 'confirmed' as const,
+    timestamp: new Date(r.created_at),
+    txHash: r.tx_hash,
+  }));
 
   const filteredTransactions = ALL_TRANSACTIONS.filter(
     (tx) =>
@@ -93,16 +66,19 @@ export default function Transactions() {
             <h1 className="text-3xl font-display font-bold">交易記錄</h1>
             <p className="text-muted-foreground mt-2">查看所有 GKC 與 XRP 交易</p>
           </div>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => {
+            if (!token) return;
+            setLoading(true);
+            fetch('/api/v1/wallet/transactions?limit=100', {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+              .then(r => r.json())
+              .then((data: { transactions: TxRow[] }) => setTxRows(data.transactions ?? []))
+              .finally(() => setLoading(false));
+          }}>
             <Download className="w-4 h-4" />
-            導出記錄
+            {loading ? '載入中…' : '重新整理'}
           </Button>
-        </div>
-
-        {/* Demo 資料提示 */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-yellow-500/40 bg-yellow-500/5 text-sm text-yellow-600 dark:text-yellow-400">
-          <Badge variant="outline" className="border-yellow-500/60 text-yellow-600 dark:text-yellow-400 text-xs font-bold shrink-0">DEMO</Badge>
-          <span>以下為示例資料，交易紀錄 API（Phase 2+）上線後將替換為真實交易。</span>
         </div>
 
         {/* 統計卡片 */}
@@ -229,7 +205,10 @@ function StatCard({ label, value, unit }: StatCardProps) {
 }
 
 interface TransactionRowProps {
-  tx: (typeof ALL_TRANSACTIONS)[0];
+  tx: {
+    id: string; type: string; amount: number; currency: string;
+    description: string; status: string; timestamp: Date; txHash: string | null;
+  };
 }
 
 function TransactionRow({ tx }: TransactionRowProps) {
@@ -260,23 +239,24 @@ function TransactionRow({ tx }: TransactionRowProps) {
           <p className="text-xs text-muted-foreground">{tx.timestamp.toLocaleString('zh-TW')}</p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <Badge variant="outline" className="border-yellow-500/50 text-yellow-600 dark:text-yellow-400 text-xs font-semibold">
-          DEMO
-        </Badge>
+      <div className="flex items-center gap-4">
         <div className="text-right">
           <p className={`font-semibold ${isIncome ? 'text-accent' : 'text-destructive'}`}>
             {isIncome ? '+' : '-'}{tx.amount} {tx.currency}
           </p>
-          <a
-            href={`https://testnet.xrpl.org/transactions/${tx.txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
-          >
-            {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-4)}
-            <ExternalLink className="w-3 h-3" />
-          </a>
+          {tx.txHash && /^[0-9A-Fa-f]{64}$/.test(tx.txHash) ? (
+            <a
+              href={`https://testnet.xrpl.org/transactions/${tx.txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
+            >
+              {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-4)}
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          ) : (
+            <span className="text-xs text-muted-foreground italic">— 鏈下</span>
+          )}
         </div>
         <Badge
           variant={tx.status === 'confirmed' ? 'default' : 'outline'}

@@ -16,12 +16,232 @@ model User {
   xrpBalance         Decimal   @default(0) @map("xrp_balance") @db.Decimal(20, 8)
   role               String    @default("user") @db.VarChar(20)
   verificationStatus String    @default("pending") @map("verification_status") @db.VarChar(20)
-  verificationToken  String?   @map("verification_token") @db.VarChar(255)
-  verificationExpiry DateTime? @map("verification_expiry")
   verifiedAt         DateTime? @map("verified_at")
   xamanUserToken     String?   @map("xaman_user_token") @db.VarChar(255)
+  isActive           Boolean   @default(true) @map("is_active")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
+  apiKeys            ApiKey[]
+  providers          AiProvider[]
+  gpuNodes           GpuNode[]
+  inferenceSessions  InferenceSession[]
+  inferenceRecords   InferenceRecord[]
+  paymentChannels    PaymentChannel[]
+  transactions       Transaction[]
+  deposits           Deposit[]
+  userChecks         UserCheck[]
+
   @@map("users")
+}
+
+model ApiKey {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  keyHash       String    @unique @map("key_hash") @db.VarChar(64)
+  keyPrefix     String    @map("key_prefix") @db.VarChar(20)
+  name          String?   @db.VarChar(100)
+  dailyLimitGkc Decimal?  @map("daily_limit_gkc") @db.Decimal(20, 8)
+  spentTodayGkc Decimal   @default(0) @map("spent_today_gkc") @db.Decimal(20, 8)
+  totalSpentGkc Decimal   @default(0) @map("total_spent_gkc") @db.Decimal(20, 8)
+  lastUsedAt    DateTime? @map("last_used_at")
+  revokedAt     DateTime? @map("revoked_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inferenceRecords InferenceRecord[]
+  inferenceSessions InferenceSession[]
+
+  @@map("api_keys")
+}
+
+model AiProvider {
+  id                 String    @id @default(uuid()) @db.Uuid
+  ownerId            String    @map("owner_id") @db.Uuid
+  displayName        String    @map("display_name") @db.VarChar(100)
+  gpuType            String    @map("gpu_type") @db.VarChar(50)
+  vramGb             Int       @map("vram_gb")
+  endpointToken      String    @unique @map("endpoint_token") @db.VarChar(255)
+  endpointUrl        String?   @map("endpoint_url") @db.VarChar(500)
+  endpointSecret     String?   @map("endpoint_secret") @db.VarChar(255)
+  tunnelSessionId    String?   @map("tunnel_session_id") @db.VarChar(100)
+  models             String    @default("[]")
+  priceInputPer1k    Decimal   @default(0.002) @map("price_input_per_1k") @db.Decimal(10, 6)
+  priceOutputPer1k   Decimal   @default(0.004) @map("price_output_per_1k") @db.Decimal(10, 6)
+  platformFeeRate    Decimal   @default(0.20) @map("platform_fee_rate") @db.Decimal(5, 4)
+  maxConcurrent      Int       @default(4) @map("max_concurrent")
+  currentLoad        Int       @default(0) @map("current_load")
+  tokensPerSec       Decimal?  @map("tokens_per_sec") @db.Decimal(10, 2)
+  firstTokenMs       Int?      @map("first_token_ms")
+  status             String    @default("pending_validation") @db.VarChar(30)
+  uptime30d          Decimal   @default(0) @map("uptime_30d") @db.Decimal(5, 2)
+  totalRequests      Int       @default(0) @map("total_requests")
+  avgRating          Decimal   @default(5.0) @map("avg_rating") @db.Decimal(3, 1)
+  lastHeartbeat      DateTime? @map("last_heartbeat")
+  verifiedAt         DateTime? @map("verified_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  owner            User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  inferenceSessions InferenceSession[]
+  inferenceRecords  InferenceRecord[]
+
+  @@map("ai_providers")
+}
+
+model GpuNode {
+  id             String    @id @default(uuid()) @db.Uuid
+  ownerId        String    @map("owner_id") @db.Uuid
+  nodeName       String    @map("node_name") @db.VarChar(100)
+  gpuType        String    @map("gpu_type") @db.VarChar(50)
+  fp16Flops      Decimal?  @map("fp16_flops") @db.Decimal(10, 2)
+  vramGb         Int?      @map("vram_gb")
+  cuScore        Decimal?  @map("cu_score") @db.Decimal(10, 2)
+  tier           String?   @db.VarChar(20)
+  status         String    @default("pending_benchmark") @db.VarChar(30)
+  utilization    Decimal   @default(0) @db.Decimal(5, 2)
+  revenueToday   Decimal   @default(0) @map("revenue_today") @db.Decimal(20, 8)
+  revenueTotal   Decimal   @default(0) @map("revenue_total") @db.Decimal(20, 8)
+  lastBenchmark  DateTime? @map("last_benchmark")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@map("gpu_nodes")
+}
+
+model UserCheck {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  xummUuid      String?   @map("xumm_uuid") @db.VarChar(100)
+  xrplCheckId   String?   @unique @map("xrpl_check_id") @db.VarChar(100)
+  sendMaxGkc    Decimal   @map("send_max_gkc") @db.Decimal(20, 8)
+  spentGkc      Decimal   @default(0) @map("spent_gkc") @db.Decimal(20, 8)
+  status        String    @default("pending") @db.VarChar(20)
+  expiresAt     DateTime? @map("expires_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inferenceSessions InferenceSession[]
+
+  @@map("user_checks")
+}
+
+model InferenceSession {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  providerId      String?   @map("provider_id") @db.Uuid
+  checkId         String?   @map("check_id") @db.Uuid
+  apiKeyId        String?   @map("api_key_id") @db.Uuid
+  model           String    @db.VarChar(100)
+  totalRequests   Int       @default(0) @map("total_requests")
+  totalInputTok   Int       @default(0) @map("total_input_tok")
+  totalOutputTok  Int       @default(0) @map("total_output_tok")
+  totalCostGkc    Decimal   @default(0) @map("total_cost_gkc") @db.Decimal(20, 8)
+  merkleRoot      String?   @map("merkle_root") @db.VarChar(64)
+  status          String    @default("open") @db.VarChar(20)
+  settledAt       DateTime? @map("settled_at")
+  txHash          String?   @map("tx_hash") @db.VarChar(100)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User            @relation(fields: [userId], references: [id])
+  provider        AiProvider?     @relation(fields: [providerId], references: [id])
+  check           UserCheck?      @relation(fields: [checkId], references: [id])
+  apiKey          ApiKey?         @relation(fields: [apiKeyId], references: [id])
+  records         SessionRecord[]
+
+  @@map("inference_sessions")
+}
+
+model SessionRecord {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionId    String   @map("session_id") @db.Uuid
+  seq          Int
+  inputTokens  Int      @map("input_tokens")
+  outputTokens Int      @map("output_tokens")
+  costGkc      Decimal  @map("cost_gkc") @db.Decimal(20, 8)
+  leafHash     String   @map("leaf_hash") @db.VarChar(64)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  session InferenceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, seq])
+  @@map("session_records")
+}
+
+model InferenceRecord {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  providerId      String?  @map("provider_id") @db.Uuid
+  apiKeyId        String?  @map("api_key_id") @db.Uuid
+  model           String   @db.VarChar(100)
+  inputTokens     Int      @default(0) @map("input_tokens")
+  outputTokens    Int      @default(0) @map("output_tokens")
+  costGkc         Decimal  @default(0) @map("cost_gkc") @db.Decimal(20, 8)
+  providerRevenue Decimal  @default(0) @map("provider_revenue") @db.Decimal(20, 8)
+  platformRevenue Decimal  @default(0) @map("platform_revenue") @db.Decimal(20, 8)
+  channelId       String?  @map("channel_id") @db.VarChar(100)
+  settled         Boolean  @default(false)
+  txHash          String?  @map("tx_hash") @db.VarChar(100)
+  durationMs      Int?     @map("duration_ms")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user     User        @relation(fields: [userId], references: [id])
+  provider AiProvider? @relation(fields: [providerId], references: [id])
+  apiKey   ApiKey?     @relation(fields: [apiKeyId], references: [id])
+
+  @@map("inference_records")
+}
+
+model PaymentChannel {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  xrplChannelId  String    @unique @map("xrpl_channel_id") @db.VarChar(100)
+  lockedGkc      Decimal   @map("locked_gkc") @db.Decimal(20, 8)
+  spentGkc       Decimal   @default(0) @map("spent_gkc") @db.Decimal(20, 8)
+  claimAmount    Decimal   @default(0) @map("claim_amount") @db.Decimal(20, 8)
+  claimSignature String?   @map("claim_signature")
+  status         String    @default("open") @db.VarChar(20)
+  expiresAt      DateTime? @map("expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("payment_channels")
+}
+
+model Transaction {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  type         String   @db.VarChar(40)
+  amountGkc    Decimal  @map("amount_gkc") @db.Decimal(20, 8)
+  balanceAfter Decimal  @map("balance_after") @db.Decimal(20, 8)
+  referenceId  String?  @map("reference_id") @db.Uuid
+  txHash       String?  @map("tx_hash") @db.VarChar(100)
+  description  String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("transactions")
+}
+
+model Deposit {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  xummUuid   String   @unique @map("xumm_uuid") @db.VarChar(100)
+  destTag    Int      @map("dest_tag")
+  xrpAmount  Decimal  @map("xrp_amount") @db.Decimal(20, 8)
+  gkcAmount  Decimal  @map("gkc_amount") @db.Decimal(20, 8)
+  status     String   @default("pending") @db.VarChar(20)
+  txHash     String?  @map("tx_hash") @db.VarChar(100)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("deposits")
 }
