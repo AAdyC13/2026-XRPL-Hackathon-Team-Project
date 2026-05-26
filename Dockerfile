@@ -7,14 +7,12 @@ COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 RUN pnpm install --frozen-lockfile
 
-COPY nest-cli.json prisma.config.ts tsconfig.backend.json tsconfig.json tsconfig.node.json vite.config.ts components.json ./
+COPY tsconfig.json tsconfig.node.json vite.config.ts components.json prisma.config.ts ./
 COPY prisma ./prisma
-COPY src ./src
-COPY scripts ./scripts
 COPY client ./client
 COPY shared ./shared
 
-RUN pnpm run build
+RUN pnpm vite build
 
 FROM node:22-alpine AS runner
 WORKDIR /app
@@ -27,15 +25,16 @@ COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 RUN pnpm install --frozen-lockfile
 
-COPY prisma.config.ts ./prisma.config.ts
+COPY prisma.config.ts ./
 COPY prisma ./prisma
-COPY src/prisma ./src/prisma
+COPY server ./server
+COPY shared ./shared
 COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist/public ./dist/public
 
 RUN sed -i 's/\r$//' ./scripts/docker-entrypoint.sh \
   && chmod +x ./scripts/docker-entrypoint.sh \
-  && pnpm prisma generate \
+  && pnpm db:generate \
   && chown -R node:node /app
 
 USER node
