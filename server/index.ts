@@ -43,8 +43,11 @@ async function startServer() {
   // OpenAI-compatible endpoint
   app.use('/v1', openaiRouter);
 
-  // Health check
-  app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
+  // Health check (alias /health for Docker / vite proxy)
+  const healthHandler = (_req: express.Request, res: express.Response) =>
+    res.json({ status: 'ok', ts: new Date().toISOString() });
+  app.get('/api/health', healthHandler);
+  app.get('/health', healthHandler);
 
   // ── Static / SPA ────────────────────────────────────────────────────────
   const staticPath = path.resolve(process.cwd(), 'dist', 'public');
@@ -55,7 +58,7 @@ async function startServer() {
     res.sendFile(path.join(staticPath, 'index.html'));
   });
 
-  const port = Number(process.env.PORT ?? 3001);
+  const port = Number(process.env.PORT ?? 3000);
 
   server.listen(port, () => {
     console.log(`[Server] http://localhost:${port}/`);
