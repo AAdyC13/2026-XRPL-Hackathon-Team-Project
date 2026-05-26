@@ -19,9 +19,9 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await login(email, password);
+      const loggedInUser = await login(email, password);
       toast.success('登入成功，歡迎回來！');
-      navigate('/dashboard');
+      navigate(loggedInUser.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '登入失敗');
     } finally {

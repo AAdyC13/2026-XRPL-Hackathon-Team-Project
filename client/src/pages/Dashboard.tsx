@@ -1,10 +1,12 @@
 ﻿import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { SAMPLE_GPU_NODES } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowUpRight, ArrowDownLeft, Zap, Activity } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Zap, Activity, Wallet } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Link } from 'wouter';
 
 // 示例數據
 const chartData = [
@@ -32,6 +34,8 @@ export default function Dashboard() {
   const gkcDisplay = user?.gkcBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? '—';
   const xrpDisplay = user?.xrpBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? '—';
 
+  const showWalletBanner = user?.verificationStatus === 'verified' && !user?.xrpAddress;
+
   return (
     <Layout>
       <div className="p-8 space-y-8">
@@ -42,6 +46,28 @@ export default function Dashboard() {
             錢包餘額來自後端帳號；圖表與節點統計待 Phase 2+ API
           </p>
         </div>
+
+        {/* 錢包綁定引導 Banner */}
+        {showWalletBanner && (
+          <Card className="border-primary/40 bg-primary/5">
+            <CardContent className="pt-5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary/15 text-primary shrink-0">
+                    <Wallet className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">帳號已通過驗證！</p>
+                    <p className="text-sm text-muted-foreground">前往錢包頁面綁定 Xaman 錢包，即可啟用 GKC 功能。</p>
+                  </div>
+                </div>
+                <Link href="/wallet">
+                  <Button size="sm" className="shrink-0">前往綁定</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 統計卡片網格 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -84,7 +110,10 @@ export default function Dashboard() {
           {/* 使用趨勢 */}
           <Card>
             <CardHeader>
-              <CardTitle>今日使用趨勢</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                今日使用趨勢
+                <Badge variant="outline" className="border-yellow-500/50 text-yellow-600 dark:text-yellow-400 text-xs font-semibold">DEMO</Badge>
+              </CardTitle>
               <CardDescription>示例圖表 — 待 /api/v1/stats（Phase 2+）</CardDescription>
             </CardHeader>
             <CardContent>
@@ -115,8 +144,11 @@ export default function Dashboard() {
           {/* 收益趨勢 */}
           <Card>
             <CardHeader>
-              <CardTitle>本週收益</CardTitle>
-              <CardDescription>算力貢獻收益統計</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                本週收益
+                <Badge variant="outline" className="border-yellow-500/50 text-yellow-600 dark:text-yellow-400 text-xs font-semibold">DEMO</Badge>
+              </CardTitle>
+              <CardDescription>算力貢獻收益統計（示例數據）</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -141,8 +173,11 @@ export default function Dashboard() {
         {/* 活躍節點 */}
         <Card>
           <CardHeader>
-            <CardTitle>活躍算力節點</CardTitle>
-            <CardDescription>您的 GPU 節點實時狀態</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              活躍算力節點
+              <Badge variant="outline" className="border-yellow-500/50 text-yellow-600 dark:text-yellow-400 text-xs font-semibold">DEMO</Badge>
+            </CardTitle>
+            <CardDescription>您的 GPU 節點實時狀態（示例數據）</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

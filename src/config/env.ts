@@ -16,7 +16,14 @@ const envSchema = z.object({
   DEFAULT_TRUST_LIMIT: z.string().default("1000000"),
   XUMM_API_KEY: z.string().optional(),
   XUMM_API_SECRET: z.string().optional(),
-  XUMM_WEBHOOK_URL: z.string().url().optional().or(z.literal(""))
+  XUMM_WEBHOOK_URL: z.string().url().optional().or(z.literal("")),
+  APP_URL: z.string().url().default("http://localhost:3000"),
+  SCHOOL_EMAIL_DOMAIN: z.string().default("edu.tw"),
+  MAIL_HOST: z.string().optional(),
+  MAIL_PORT: z.coerce.number().int().positive().default(587),
+  MAIL_USER: z.string().optional(),
+  MAIL_PASS: z.string().optional(),
+  MAIL_FROM: z.string().default("noreply@gkc-platform.edu.tw")
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -5,6 +5,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { ConfigModule } from "@nestjs/config";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { AdminModule } from "./admin/admin.module.js";
 import { AuthModule } from "./auth/auth.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
 import { UsersModule } from "./users/users.module.js";
@@ -32,7 +33,8 @@ const __dirname = path.dirname(__filename);
     UsersModule,
     AuthModule,
     WalletModule,
-    XrplModule
+    XrplModule,
+    AdminModule
   ],
   providers: [
     {

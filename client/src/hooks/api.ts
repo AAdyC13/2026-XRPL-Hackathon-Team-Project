@@ -39,3 +39,7 @@ export function apiPost<T>(path: string, payload: unknown, options?: Omit<ApiReq
     body: JSON.stringify(payload)
   });
 }
+
+export function apiDelete<T>(path: string, options?: Omit<ApiRequestOptions, "method" | "body">) {
+  return apiFetch<T>(path, { ...options, method: "DELETE" });
+}

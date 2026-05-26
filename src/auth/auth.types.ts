@@ -6,6 +6,7 @@ export type AuthUserProfile = {
   xrpAddress: string | null;
   gkcBalance: number;
   xrpBalance: number;
+  verificationStatus: string;
 };
 
 export type JwtPayload = {

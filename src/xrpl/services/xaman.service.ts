@@ -42,6 +42,14 @@ export async function createSignRequest(input: CreateSignRequestInput) {
   };
 }
 
+export async function createWalletBindPayload(userToken?: string) {
+  return createSignRequest({
+    txjson: { TransactionType: "SignIn" } as never,
+    userToken,
+    customMeta: { instruction: "請簽名以綁定您的 Xaman 錢包至高科幣平台" }
+  });
+}
+
 export async function getPayloadStatus(uuid: string) {
   const payload = await getXummSdk().payload.get(uuid);
 
@@ -53,6 +61,7 @@ export async function getPayloadStatus(uuid: string) {
     expired: payload?.meta?.expired ?? false,
     txid: payload?.response?.txid,
     account: payload?.response?.account,
+    userToken: (payload?.response as Record<string, unknown>)?.user_token as string | undefined,
     dispatchedResult: payload?.response?.dispatched_result
   };
 }

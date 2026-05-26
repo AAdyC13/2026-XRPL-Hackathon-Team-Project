@@ -2,7 +2,8 @@
 
 以 **XRP Ledger** 為結算層的校園 GPU 算力共享與 AI 推論平台。結合三條核心產品線：AI 推論服務、算力出租（Escrow 保障）、算力貢獻分潤（XRPL Hooks）。
 
-> **整合狀態**：登入／註冊、錢包餘額與 TrustLine 已接後端 API；部署時自動 `migrate` + 版本化 `seed`（見 [docs/DATABASE.md](./docs/DATABASE.md)）。AI 推論、Payment Channel、節點等仍待 Phase 2+ API。
+> **整合狀態**：登入／註冊、Admin 審核流程、Xaman 錢包綁定、Authorized TrustLine 已接後端 API；部署時自動 `migrate` + 版本化 `seed`。AI 推論、Payment Channel、節點等仍待 Phase 2+ API。  
+> API 文件：[docs/GKC-PLATFORM-API.md](./docs/GKC-PLATFORM-API.md)　｜　變更記錄：[CHANGELOG.md](./CHANGELOG.md)
 
 ## 部署架構
 

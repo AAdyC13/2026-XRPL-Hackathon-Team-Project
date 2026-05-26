@@ -7,16 +7,21 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  username     String   @unique @db.VarChar(64)
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  xrpAddress   String?  @map("xrp_address") @db.VarChar(64)
-  gkcBalance   Decimal  @default(0) @map("gkc_balance") @db.Decimal(20, 8)
-  xrpBalance   Decimal  @default(0) @map("xrp_balance") @db.Decimal(20, 8)
-  role         String   @default("user") @db.VarChar(20)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id                 String    @id @default(uuid()) @db.Uuid
+  username           String    @unique @db.VarChar(64)
+  email              String    @unique @db.VarChar(255)
+  passwordHash       String    @map("password_hash") @db.VarChar(255)
+  xrpAddress         String?   @unique @map("xrp_address") @db.VarChar(64)
+  gkcBalance         Decimal   @default(0) @map("gkc_balance") @db.Decimal(20, 8)
+  xrpBalance         Decimal   @default(0) @map("xrp_balance") @db.Decimal(20, 8)
+  role               String    @default("user") @db.VarChar(20)
+  verificationStatus String    @default("pending") @map("verification_status") @db.VarChar(20)
+  verificationToken  String?   @map("verification_token") @db.VarChar(255)
+  verificationExpiry DateTime? @map("verification_expiry")
+  verifiedAt         DateTime? @map("verified_at")
+  xamanUserToken     String?   @map("xaman_user_token") @db.VarChar(255)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
   @@map("users")
 }

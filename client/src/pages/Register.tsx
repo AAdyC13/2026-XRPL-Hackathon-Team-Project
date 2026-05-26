@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Zap, Mail, Lock, User } from 'lucide-react';
+import { Zap, Mail, Lock, User, Clock } from 'lucide-react';
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -14,6 +14,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
   const { register } = useAuth();
   const [, navigate] = useLocation();
 
@@ -26,14 +27,45 @@ export default function Register() {
     setIsLoading(true);
     try {
       await register(username, email, password);
-      toast.success('帳戶建立成功！歡迎加入高科幣平台');
-      navigate('/dashboard');
+      setRegistered(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '註冊失敗');
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (registered) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-8">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/30">
+              <Zap className="w-9 h-9 text-white" />
+            </div>
+          </div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Clock className="w-6 h-6 text-yellow-500" />
+                <CardTitle className="text-xl">帳戶已建立</CardTitle>
+              </div>
+              <CardDescription>等待管理員審核</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg bg-muted/50 text-sm space-y-2">
+                <p className="font-medium">您的帳號目前正在等待管理員審核</p>
+                <p className="text-muted-foreground">審核通過後，您將可以連接 Xaman 錢包並使用所有功能。</p>
+              </div>
+              <Button className="w-full" onClick={() => navigate('/dashboard')}>
+                前往 Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -51,7 +83,7 @@ export default function Register() {
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">建立帳戶</CardTitle>
-            <CardDescription>加入高科幣平台，開始使用 AI 算力服務</CardDescription>
+            <CardDescription>建立帳戶後，等待管理員審核通過即可使用所有功能</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">

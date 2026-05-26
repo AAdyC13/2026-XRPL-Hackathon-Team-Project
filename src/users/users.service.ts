@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { User } from "@prisma/client";
+import { Prisma, User } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service.js";
 
 @Injectable()
@@ -12,6 +12,14 @@ export class UsersService {
 
   findById(id: string): Promise<User | null> {
     return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  findByVerificationToken(token: string): Promise<User | null> {
+    return this.prisma.user.findFirst({ where: { verificationToken: token } });
+  }
+
+  findByXrpAddress(xrpAddress: string): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { xrpAddress } });
   }
 
   createUser(input: {
@@ -28,5 +36,25 @@ export class UsersService {
         xrpAddress: input.xrpAddress
       }
     });
+  }
+
+  updateUser(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+    return this.prisma.user.update({ where: { id }, data });
+  }
+
+  findMany(
+    filter?: { verificationStatus?: string },
+    pagination?: { skip: number; take: number }
+  ): Promise<User[]> {
+    return this.prisma.user.findMany({
+      where: filter,
+      skip: pagination?.skip,
+      take: pagination?.take,
+      orderBy: { createdAt: "desc" }
+    });
+  }
+
+  count(filter?: { verificationStatus?: string }): Promise<number> {
+    return this.prisma.user.count({ where: filter });
   }
 }

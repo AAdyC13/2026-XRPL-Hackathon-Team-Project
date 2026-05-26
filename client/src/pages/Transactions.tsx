@@ -99,6 +99,12 @@ export default function Transactions() {
           </Button>
         </div>
 
+        {/* Demo 資料提示 */}
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-yellow-500/40 bg-yellow-500/5 text-sm text-yellow-600 dark:text-yellow-400">
+          <Badge variant="outline" className="border-yellow-500/60 text-yellow-600 dark:text-yellow-400 text-xs font-bold shrink-0">DEMO</Badge>
+          <span>以下為示例資料，交易紀錄 API（Phase 2+）上線後將替換為真實交易。</span>
+        </div>
+
         {/* 統計卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <StatCard
@@ -254,7 +260,10 @@ function TransactionRow({ tx }: TransactionRowProps) {
           <p className="text-xs text-muted-foreground">{tx.timestamp.toLocaleString('zh-TW')}</p>
         </div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <Badge variant="outline" className="border-yellow-500/50 text-yellow-600 dark:text-yellow-400 text-xs font-semibold">
+          DEMO
+        </Badge>
         <div className="text-right">
           <p className={`font-semibold ${isIncome ? 'text-accent' : 'text-destructive'}`}>
             {isIncome ? '+' : '-'}{tx.amount} {tx.currency}

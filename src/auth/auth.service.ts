@@ -22,6 +22,7 @@ export class AuthService {
     email: string;
     role: string;
     xrpAddress: string | null;
+    verificationStatus: string;
     gkcBalance: { toNumber: () => number } | number;
     xrpBalance: { toNumber: () => number } | number;
   }): AuthUserProfile {
@@ -34,6 +35,7 @@ export class AuthService {
       email: user.email,
       role: user.role,
       xrpAddress: user.xrpAddress,
+      verificationStatus: user.verificationStatus,
       gkcBalance: readNumber(user.gkcBalance),
       xrpBalance: readNumber(user.xrpBalance)
     };
@@ -73,13 +75,16 @@ export class AuthService {
       email: input.email,
       passwordHash
     });
+
     const token = await this.buildToken(user.id, user.role);
 
     return {
       id: user.id,
       username: user.username,
       email: user.email,
-      token
+      token,
+      verificationStatus: "pending",
+      message: "帳號已建立，等待管理員審核。"
     };
   }
 
