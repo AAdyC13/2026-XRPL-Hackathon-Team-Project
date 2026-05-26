@@ -9,38 +9,27 @@ pnpm db:migrate          # local dev: create + apply
 pnpm db:deploy           # CI / production: apply pending only
 ```
 
-On VPS, the app container runs `db:deploy` then `db:seed` before start (see `scripts/docker-entrypoint.sh`). The production image runs `prisma generate` at **build time** and `chown`s `/app` to the `node` user so migrate/seed do not fail on read-only `node_modules`.
+On VPS, the app container runs `db:deploy` before start (see `scripts/docker-entrypoint.sh`). Run seeds manually when needed: `pnpm seed:db`. The production image runs `prisma generate` at **build time** and `chown`s `/app` to the `node` user so migrate does not fail on read-only `node_modules`.
+
+Runtime DB access uses Prisma 7 with `@prisma/adapter-pg` — see `server/db/index.ts` (`DATABASE_URL` required).
 
 ## Bootstrap data (users, reference rows)
 
-Use **versioned seeds** under `prisma/seeds/`. Each seed has a stable id (`001_demo_user`, `002_admin_user`, …).
-
-- Tracked in DB table `seed_migrations` (created automatically).
-- **Already applied → skipped** on every later deploy (safe for persistent VPS volumes).
-- Add `003_your_seed.ts`, register in `prisma/seeds/index.ts`.
+Script: `server/scripts/seed-db.ts` (idempotent — skips existing demo user / providers).
 
 ```bash
-pnpm db:seed
+pnpm seed:db
 ```
 
-Production: `scripts/docker-entrypoint.sh` runs `db:seed` after `db:deploy` on each container start. Seeds use the same Prisma 7 driver adapter as the Nest app (`src/prisma/create-prisma-client.ts`).
-
-### Built-in seeds
-
-| Id | Purpose | Required env |
-|----|---------|----------------|
-| `001_demo_user` | Demo login for dev/demo | — |
-| `002_admin_user` | Platform admin account | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` (optional) |
-
-Demo credentials (after `001` runs): `demo@gkc.edu.tw` / `Demo12345678`.
+Demo credentials: `demo@gkc.edu.tw` / `password123`.
 
 ### VPS checklist
 
 1. `docker compose up -d` (postgres + app).
 2. `.env` on server with `DATABASE_URL=postgresql://gkc:gkc@postgres:5432/gkc_platform` (host **`postgres`**, not `localhost`).
 3. Set `JWT_SECRET` (≥32 chars) and XRPL issuer secrets.
-4. For admin bootstrap: set `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` before first deploy (or before adding seed `002` on an existing DB).
-5. First start applies migrations + seeds; later deploys only run new migrations/seeds.
+4. Optional: `pnpm seed:db` inside the app container (or locally) for demo user and mock providers.
+5. First start applies migrations; later deploys only run pending migrations.
 
 ## Test database
 
