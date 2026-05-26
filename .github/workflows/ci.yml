@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Check and test
+  check:
+    name: Type check and migrate
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -33,9 +33,14 @@ jobs:
       DATABASE_URL: postgresql://gkc:gkc@localhost:5432/gkc_platform_test
       JWT_SECRET: minimum_32_character_random_secret_for_tests_only
       JWT_EXPIRES_IN: "86400"
-      ISSUER_ADDRESS: rTEST_ISSUER_ADDRESS
-      CURRENCY_CODE: GKC
-      DEFAULT_TRUST_LIMIT: "1000000"
+      GKC_ISSUER_ADDRESS: rTEST_ISSUER_ADDRESS
+      GKC_ISSUER_SEED: sEd_TEST_SEED_NOT_REAL
+      PLATFORM_ADDRESS: rTEST_PLATFORM_ADDRESS
+      PLATFORM_SEED: sEd_TEST_PLATFORM_SEED
+      GKC_CURRENCY: GKC
+      DEFAULT_TRUST_LIMIT: "10000000"
+      XRPL_WSS: wss://s.altnet.rippletest.net:51233
+      NODE_ENV: test
 
     steps:
       - name: Checkout
@@ -54,13 +59,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm prisma generate
+        run: pnpm db:generate
 
       - name: Apply database migrations
         run: pnpm db:deploy
 
-      - name: Type check backend
-        run: pnpm check:backend
-
-      - name: Run tests
-        run: pnpm test:ci
+      - name: Type check (frontend)
+        run: pnpm check

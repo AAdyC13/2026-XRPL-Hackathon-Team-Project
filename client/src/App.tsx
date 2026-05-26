@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Admin from "./pages/Admin";
 import AdminHome from "./pages/AdminHome";
+import Demo from "./pages/Demo";
 
 /** Regular users only — admin is redirected to /admin */
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -48,6 +49,7 @@ function Router() {
       <Route path={"/nodes"} component={() => <ProtectedRoute component={Nodes} />} />
       <Route path={"/transactions"} component={() => <ProtectedRoute component={Transactions} />} />
       <Route path={"/compute-rental"} component={() => <ProtectedRoute component={ComputeRental} />} />
+      <Route path={"/demo"} component={() => <ProtectedRoute component={Demo} />} />
       {/* Admin routes */}
       <Route path={"/admin"} component={() => <AdminRoute component={AdminHome} />} />
       <Route path={"/admin/users"} component={() => <AdminRoute component={Admin} />} />

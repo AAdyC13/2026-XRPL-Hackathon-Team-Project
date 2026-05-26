@@ -150,6 +150,7 @@ export const ROUTES = {
   NODES: '/nodes',
   COMPUTE_RENTAL: '/compute-rental',
   TRANSACTIONS: '/transactions',
+  DEMO: '/demo',
 };
 
 // 動畫時間配置

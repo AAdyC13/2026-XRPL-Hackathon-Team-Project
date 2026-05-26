@@ -12,22 +12,26 @@ export default function Login() {
   const [email, setEmail] = useState('demo@gkc.edu.tw');
   const [password, setPassword] = useState('Demo12345678');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [, navigate] = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const loggedInUser = await login(email, password);
+      await login(email, password);
       toast.success('登入成功，歡迎回來！');
-      navigate(loggedInUser.role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '登入失敗');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Redirect after login state is set
+  if (user) {
+    navigate(user.role === 'admin' ? '/admin' : '/dashboard');
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
