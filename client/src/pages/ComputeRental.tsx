@@ -60,7 +60,7 @@ export default function ComputeRental() {
   const [isRenting, setIsRenting] = useState(false);
   const [rentals, setRentals] = useState<ActiveRental[]>(MOCK_RENTALS);
 
-  const pricePerHour = selectedNode ? selectedNode.computeUnit.cuScore * PRICING.rentalPerCuHour : 0;
+  const pricePerHour = selectedNode ? selectedNode.computeUnit.cuScore * PRICING.computeRental.baseCostPerCUHour : 0;
   const totalCost = pricePerHour * Number(duration);
 
   const handleRent = async () => {
@@ -124,7 +124,7 @@ export default function ComputeRental() {
           <h2 className="text-xl font-semibold mb-4">可用節點</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {SAMPLE_GPU_NODES.map((node) => {
-              const hourlyRate = node.computeUnit.cuScore * PRICING.rentalPerCuHour;
+              const hourlyRate = node.computeUnit.cuScore * PRICING.computeRental.baseCostPerCUHour;
               return (
                 <Card key={node.id} className="hover:border-primary/50 transition-colors">
                   <CardHeader className="pb-3">

@@ -93,7 +93,7 @@ export default function Nodes() {
       lastBenchmark: new Date(),
     };
 
-    setNodes((prev) => [...prev, newNode as typeof SAMPLE_GPU_NODES[0]]);
+    setNodes((prev) => [...prev, newNode as unknown as typeof SAMPLE_GPU_NODES[0]]);
     setIsDialogOpen(false);
     setNodeName('');
     toast.info('節點已注冊，正在執行基準測試...');

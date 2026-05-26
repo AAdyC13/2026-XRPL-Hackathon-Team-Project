@@ -433,7 +433,7 @@ export default function AIInference() {
           try {
             const chunk = JSON.parse(payload);
             if (lastEventName === 'gkc_meta') {
-              serverMeta = chunk as typeof serverMeta;
+              serverMeta = chunk as { input_tokens: number; output_tokens: number; cost_gkc: number };
               lastEventName = '';
               continue;
             }

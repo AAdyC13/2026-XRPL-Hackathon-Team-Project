@@ -49,13 +49,13 @@ export default function Transactions() {
   const filteredTransactions = ALL_TRANSACTIONS.filter(
     (tx) =>
       tx.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.txHash.toLowerCase().includes(searchTerm.toLowerCase())
+      (tx.txHash ?? '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const inferences = filteredTransactions.filter((tx) => tx.type === 'inference');
-  const rewards = filteredTransactions.filter((tx) => tx.type === 'reward');
-  const transfers = filteredTransactions.filter((tx) => tx.type === 'transfer');
-  const swaps = filteredTransactions.filter((tx) => tx.type === 'swap');
+  const inferences = filteredTransactions.filter((tx) => tx.type === 'inference_debit' || tx.type === 'inference');
+  const rewards = filteredTransactions.filter((tx) => tx.type === 'topup' || tx.type === 'reward');
+  const transfers = filteredTransactions.filter((tx) => tx.type === 'transfer' || tx.type === 'channel_open' || tx.type === 'channel_close');
+  const swaps = filteredTransactions.filter((tx) => tx.type === 'provider_payout' || tx.type === 'swap');
 
   return (
     <Layout>
@@ -100,7 +100,7 @@ export default function Transactions() {
           />
           <StatCard
             label="待確認"
-            value={ALL_TRANSACTIONS.filter((tx) => tx.status === 'pending').length}
+            value={0}
             unit="筆"
           />
         </div>

@@ -139,7 +139,7 @@ function MerkleTree({ root, leaves }: { root: string; leaves: LeafRecord[] }) {
     const l = leaves[i].leaf_hash;
     const r = leaves[i + 1]?.leaf_hash;
     // We don't recompute hashes client-side; just show the pairing
-    pairs.push({ left: l, right: r });
+    pairs.push({ left: l, right: r, parent: `pair-${i / 2}` });
   }
 
   return (
