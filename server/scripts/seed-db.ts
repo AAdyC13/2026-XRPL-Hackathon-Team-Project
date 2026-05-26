@@ -17,19 +17,22 @@ import { prisma } from '../db/index.js';
 // ── Demo User ──────────────────────────────────────────────────────────────
 
 const DEMO_PASSWORD = 'password123';
-const demoId = 'usr-demo-001';
+const DEMO_EMAIL = 'demo@gkc.edu.tw';
+/** Stable UUID for idempotent seed (schema uses @db.Uuid). */
+const DEMO_USER_ID = '00000000-0000-4000-a000-000000000001';
 // Use the GKC issuer address for demo — valid checksum, no trust line needed
 const DEMO_XRP_ADDRESS = process.env.GKC_ISSUER_ADDRESS ?? 'rBeY7pzk4siwXCb6XpVGj9nZ6FcQBdyh79';
 
 (async () => {
-const existingUser = await prisma.user.findUnique({ where: { id: demoId } });
+const existingUser = await prisma.user.findUnique({ where: { email: DEMO_EMAIL } });
+const demoId = existingUser?.id ?? DEMO_USER_ID;
 if (!existingUser) {
   const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
   await prisma.user.create({
     data: {
       id: demoId,
       username: 'gkc_researcher',
-      email: 'demo@gkc.edu.tw',
+      email: DEMO_EMAIL,
       passwordHash: hash,
       role: 'node_owner',
       xrpAddress: DEMO_XRP_ADDRESS,
@@ -39,16 +42,19 @@ if (!existingUser) {
   });
   console.log('✓ Demo user created: demo@gkc.edu.tw / password123');
 } else {
-  // Always keep xrp_address current (fix invalid checksum addresses)
-  await prisma.user.update({ where: { id: demoId }, data: { xrpAddress: DEMO_XRP_ADDRESS } });
-  console.log('· Demo user already exists — xrp_address refreshed');
+  const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  await prisma.user.update({
+    where: { id: demoId },
+    data: { xrpAddress: DEMO_XRP_ADDRESS, passwordHash: hash },
+  });
+  console.log('· Demo user already exists — password and xrp_address refreshed');
 }
 
 // ── Mock Providers ─────────────────────────────────────────────────────────
 
 const MOCK_PROVIDERS = [
   {
-    id: 'prov-001',
+    id: '00000000-0000-4000-a000-000000000101',
     owner_id: demoId,
     display_name: 'TaiwanAI Node #1',
     gpu_type: 'RTX 4090',
@@ -66,7 +72,7 @@ const MOCK_PROVIDERS = [
     max_concurrent: 8,
   },
   {
-    id: 'prov-002',
+    id: '00000000-0000-4000-a000-000000000102',
     owner_id: demoId,
     display_name: 'NTHU Research GPU',
     gpu_type: 'A100 80G',
@@ -84,7 +90,7 @@ const MOCK_PROVIDERS = [
     max_concurrent: 4,
   },
   {
-    id: 'prov-003',
+    id: '00000000-0000-4000-a000-000000000103',
     owner_id: demoId,
     display_name: 'Home Server Pro',
     gpu_type: 'RTX 3090',
@@ -102,7 +108,7 @@ const MOCK_PROVIDERS = [
     max_concurrent: 6,
   },
   {
-    id: 'prov-004',
+    id: '00000000-0000-4000-a000-000000000104',
     owner_id: demoId,
     display_name: 'Enterprise H100',
     gpu_type: 'H100 SXM',
@@ -120,7 +126,7 @@ const MOCK_PROVIDERS = [
     max_concurrent: 16,
   },
   {
-    id: 'prov-005',
+    id: '00000000-0000-4000-a000-000000000105',
     owner_id: demoId,
     display_name: 'Budget Node Taiwan',
     gpu_type: 'RTX 4080 Super',
@@ -138,7 +144,7 @@ const MOCK_PROVIDERS = [
     max_concurrent: 8,
   },
   {
-    id: 'prov-006',
+    id: '00000000-0000-4000-a000-000000000106',
     owner_id: demoId,
     display_name: 'Student Lab GPU',
     gpu_type: 'RTX 3080 Ti',

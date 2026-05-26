@@ -25,13 +25,13 @@ const BCRYPT_ROUNDS = 10;
 
 const RegisterSchema = z.object({
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/),
-  email: z.email(),
+  email: z.string().email(),
   password: z.string().min(8),
   xrpAddress: z.string().optional(),
 });
 
 const LoginSchema = z.object({
-  email: z.email(),
+  email: z.string().email(),
   password: z.string().min(1),
 });
 
