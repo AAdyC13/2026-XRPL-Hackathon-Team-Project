@@ -17,6 +17,7 @@ export async function seedDemoUser(prisma: PrismaClient): Promise<void> {
       email: "demo@gkc.edu.tw",
       passwordHash,
       role: "node_owner",
+      verificationStatus: "verified",
       xrpAddress: "rN7n7otQDd6FczFgLdlqtyMVrn3Rqq5Q1",
       gkcBalance: 2847.52,
       xrpBalance: 128.5
