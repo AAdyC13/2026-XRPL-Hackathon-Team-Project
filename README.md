@@ -2,15 +2,15 @@
 
 以 **XRP Ledger** 為結算層的校園 GPU 算力共享與 AI 推論平台。結合三條核心產品線：AI 推論服務、算力出租（Escrow 保障）、算力貢獻分潤（XRPL Hooks）。
 
-> **整合狀態**：登入／註冊、Admin 審核流程、Xaman 錢包綁定、Authorized TrustLine 已接後端 API；部署時自動 `migrate` + 版本化 `seed`。AI 推論、Payment Channel、節點等仍待 Phase 2+ API。  
-> API 文件：[docs/GKC-PLATFORM-API.md](./docs/GKC-PLATFORM-API.md)　｜　變更記錄：[CHANGELOG.md](./CHANGELOG.md)
+> **整合狀態**：登入／註冊、Admin 審核流程、Xaman 錢包綁定、Authorized TrustLine 已接後端 API；部署時自動 `migrate`，seed 可手動執行。AI 推論、Payment Channel、節點等仍待 Phase 2+ API。  
+> API 文件：[docs/GKC-PLATFORM-API.md](./docs/GKC-PLATFORM-API.md)　｜　後端架構：[docs/BACKEND.md](./docs/BACKEND.md)　｜　變更記錄：[CHANGELOG.md](./CHANGELOG.md)
 
 ## 部署架構
 
-推送到 `main` 分支時，GitHub Actions 透過 `deploy-vps.yml` 建置映像並以 `docker compose --env-file deploy.env` 部署到 VPS（`127.0.1.3:3000`：Express API + `client/` 靜態檔）。伺服器 `.env` 的 `DATABASE_URL` 請用 Compose 服務名 `postgres`，見 [docs/DATABASE.md](docs/DATABASE.md)。
+推送到 `main` 分支時，GitHub Actions 透過 `deploy-vps.yml` 建置映像並以 `docker compose --env-file deploy.env` 部署到 VPS（`127.0.1.3:3000`：Nest API + `client/` 靜態檔）。部署後會觀察 3 分鐘並在健康檢查失敗時回滾到上一個成功映像；伺服器 `.env` 的 `DATABASE_URL` 請用 Compose 服務名 `postgres`，見 [docs/DATABASE.md](docs/DATABASE.md)、[docs/BACKEND.md](docs/BACKEND.md)。
 
-- `client/`：新版 GKC 平台 UI，會被 `pnpm run build` 打包到 `dist/public`
-- `src/`：XRPL Express API，production 會 serve `dist/public`
+- `client/`：GKC 平台 UI，由 `pnpm build` 打包到 `dist/public`
+- `src/`：NestJS API 進入點與模組，production 會 serve `dist/public`
 - `client-legacy/`：舊 XRPL demo client，只作本地參考，不進 Docker build，也不部署到 VPS
 - `3001` 獨立前端部署已停用，不再使用 `/opt/xrpl-frontend`
 
@@ -47,7 +47,7 @@ docker compose up -d postgres
 # 環境變數與資料庫（首次）
 cp .env.example .env
 pnpm db:migrate
-pnpm db:seed
+pnpm seed:db
 
 # 開發伺服器
 # API: http://localhost:3000
@@ -68,7 +68,7 @@ pnpm test
 | Email | `demo@gkc.edu.tw` |
 | 密碼 | `Demo12345678` |
 
-> 由 `pnpm db:seed` 寫入（`001_demo_user`）。生產環境部署時容器會自動執行 migrate + seed，詳見 [docs/DATABASE.md](./docs/DATABASE.md)。
+> 由 `pnpm seed:db` 寫入。生產環境容器啟動時自動 `migrate`；seed 需手動執行，詳見 [docs/DATABASE.md](./docs/DATABASE.md)。
 
 ---
 
@@ -114,7 +114,7 @@ gkc-platform/
 │   │       ├── constants.ts       # 路由、AI 模型、節點資料、定價
 │   │       └── utils.ts
 ├── src/                           # NestJS API + production 靜態前端託管
-├── client-legacy/                 # 舊 XRPL demo client（不部署）
+├── server/                        # 過渡期 legacy Express routes/services（逐步收斂到 src/）
 ├── shared/                        # 共用型別
 ├── BACKEND_SPECIFICATION.md       # 後端 API 完整規格書
 └── README.md

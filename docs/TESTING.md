@@ -68,8 +68,9 @@ corepack pnpm test:ci
 
 ## CI 規範
 
-- `ci.yml`：在 PR / push 觸發 `check:backend + test:ci`。
+- `ci.yml`：在 PR / push 觸發 `pnpm check` 與 `pnpm test:api`。
 - `deploy-vps.yml`：deploy 前必須先通過 `test` job，失敗即停止 build/deploy。
+- VPS deploy 後會進入 3 分鐘觀察期，每 20 秒檢查容器狀態、`app` 重啟次數與 `GET /health`。若連續失敗或偵測到 crash loop，workflow 會嘗試回滾到上一個成功的 `IMAGE_TAG`，並讓該次 GitHub Actions job 失敗。
 
 ## 常見問題
 

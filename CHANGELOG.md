@@ -4,11 +4,27 @@
 
 ---
 
-## [未發布] — 2026-05-26
+## [未發布] — 2026-05-27
 
 ### 新增
 
-#### 後端
+#### 平台後端（NestJS 主幹）
+
+- **Nest 11 執行架構**（`src/main.ts`、`src/app.module.ts`）
+  - 模組：Auth、Admin、Wallet、XRPL、Prisma、Mail、Throttler
+  - 健康檢查：`GET /health`（DB + XRPL 狀態）
+  - Production：`node dist/src/main.js`；開發：`nest start --watch`
+- **Legacy Express 掛載**（`server/legacy/create-legacy-app.ts`）
+  - Providers、API Keys、Sessions、Wallet（部分）、OpenAI `/v1` 相容路由
+- **自動化測試**（`test/`、Vitest）
+  - API：health、auth、wallet
+  - Unit：auth service、seed runner
+  - CI：`pnpm check` + `pnpm test:api`
+- **VPS 部署觀察與回滾**（`scripts/vps-post-deploy.sh`、`deploy-vps.yml`）
+  - 部署後 3 分鐘健康觀察；失敗時回滾 `IMAGE_TAG` 至 `deploy.env.previous`
+- **文件**：[docs/BACKEND.md](./docs/BACKEND.md) 描述現行後端、CI/CD 與 DB 策略
+
+#### 後端（延續 2026-05-26）
 
 - **Admin 模組** (`src/admin/`)
   - `AdminGuard`：驗證 JWT payload 內 `role === 'admin'`，否則回傳 403
@@ -70,6 +86,11 @@
   - `Dashboard.tsx`：今日使用趨勢、本週收益、活躍算力節點三個 Card
 
 ### 修改
+
+- **移除** `server/index.ts`（改由 `src/main.ts` 啟動）
+- **移除** Clerk 相關 rollback 腳本與文件（`docs/DB_ROLLBACK_CLERK.md` 等）
+- **`client/src/pages/Login.tsx`**：登入後導向改為 `useEffect`，避免 render 期 `navigate` warning
+- **`Dockerfile` / `package.json`**：Nest build、`pnpm test`、CI deploy 流程更新
 
 - **`src/auth/auth.service.ts`**
   - 移除 edu.tw 學校信箱網域驗證（`register()` 現在接受任意 email）
