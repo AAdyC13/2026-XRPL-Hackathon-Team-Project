@@ -13,6 +13,7 @@ COPY client ./client
 COPY server ./server
 COPY shared ./shared
 COPY src ./src
+COPY admin ./admin
 
 RUN pnpm build
 

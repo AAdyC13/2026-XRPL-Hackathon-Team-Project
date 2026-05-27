@@ -1,0 +1,31 @@
+packages:
+  - "."
+
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - "@tailwindcss/oxide"
+  - "bcrypt"
+  - "bufferutil"
+  - "esbuild"
+  - "prisma"
+  - "utf-8-validate"
+
+patchedDependencies:
+  wouter@3.7.1: patches/wouter@3.7.1.patch
+
+overrides:
+  tailwindcss>nanoid: 3.3.7
+  "@tiptap/extension-blockquote": 2.1.13
+  "@tiptap/extension-bold": 2.1.13
+  "@tiptap/extension-bullet-list": 2.1.13
+  "@tiptap/extension-code-block": 2.1.13
+  "@tiptap/extension-dropcursor": 2.1.13
+  "@tiptap/extension-gapcursor": 2.1.13
+  "@tiptap/extension-hard-break": 2.1.13
+  "@tiptap/extension-history": 2.1.13
+  "@tiptap/extension-horizontal-rule": 2.1.13
+  "@tiptap/extension-italic": 2.1.13
+  "@tiptap/extension-list-item": 2.1.13
+  "@tiptap/extension-ordered-list": 2.1.13
+  "@tiptap/extension-paragraph": 2.1.13
+  "@tiptap/extension-strike": 2.1.13

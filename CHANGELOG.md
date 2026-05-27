@@ -8,6 +8,26 @@
 
 ### 新增
 
+#### AdminJS 管理後台（admin-api）
+
+- **獨立 admin-api 服務**（`admin/index.ts`）
+  - AdminJS 7 + `@adminjs/prisma` 5，第一期只管理 `users` 表
+  - 獨立 session 登入（`ADMIN_EMAIL` / `ADMIN_PASSWORD` 或 `ADMIN_PASSWORD_HASH`）
+  - IP allowlist（`ADMIN_IP_ALLOWLIST`）與 per-IP rate limit（`ADMIN_RATE_LIMIT_MAX`）
+  - 結構化 audit log（`admin/audit.ts`）
+- **User 自訂 action**（`admin/user-resource.ts`）
+  - `approve` / `reject` / `reset` / `activate` / `deactivate`
+  - 隱藏 `passwordHash`、`xamanUserToken`；限制可編輯欄位
+- **Docker Compose**（`admin-api` 服務）
+  - 同一 GHCR image，`pnpm admin:start`，預設 `127.0.1.3:3002`
+  - 健康檢查：`GET /health`
+- **Prisma 降版至 6.19.x**
+  - `@adminjs/prisma` v5 尚未正式支援 Prisma 7
+  - `prisma/schema.prisma` 補上 `url = env("DATABASE_URL")`（Prisma 6 CLI 要求）
+- **pnpm workspace overrides**（`pnpm-workspace.yaml`）
+  - 鎖定 `@tiptap/extension-*` 2.1.13，修正 AdminJS 內建 editor 版本衝突
+- **文件**：[docs/ADMINJS.md](./docs/ADMINJS.md)
+
 #### 平台後端（NestJS 主幹）
 
 - **Nest 11 執行架構**（`src/main.ts`、`src/app.module.ts`）
