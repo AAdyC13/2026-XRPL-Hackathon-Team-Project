@@ -2,8 +2,8 @@
 
 以 **XRP Ledger** 為結算層的校園 GPU 算力共享與 AI 推論平台。結合三條核心產品線：AI 推論服務、算力出租（Escrow 保障）、算力貢獻分潤（XRPL Hooks）。
 
-> **整合狀態**：登入／註冊、Admin 審核流程、Xaman 錢包綁定、Authorized TrustLine 已接後端 API；部署時自動 `migrate`，seed 可手動執行。AI 推論、Payment Channel、節點等仍待 Phase 2+ API。  
-> API 文件：[docs/GKC-PLATFORM-API.md](./docs/GKC-PLATFORM-API.md)　｜　後端架構：[docs/BACKEND.md](./docs/BACKEND.md)　｜　變更記錄：[CHANGELOG.md](./CHANGELOG.md)
+> **整合狀態**：登入／註冊、Admin 審核流程、Xaman 錢包綁定、Authorized TrustLine 已接後端 API；部署時自動 `migrate`，seed 可手動執行。內部帳號管理另提供獨立 **AdminJS admin-api**（`pnpm admin:dev` → `http://localhost:3002/admin`）。AI 推論、Payment Channel、節點等仍待 Phase 2+ API。  
+> API 文件：[docs/GKC-PLATFORM-API.md](./docs/GKC-PLATFORM-API.md)　｜　後端架構：[docs/BACKEND.md](./docs/BACKEND.md)　｜　Admin 後台：[docs/ADMINJS.md](./docs/ADMINJS.md)　｜　變更記錄：[CHANGELOG.md](./CHANGELOG.md)
 
 ## 部署架構
 
@@ -83,7 +83,8 @@ pnpm test
 | 路由 | wouter v3（已 patch）|
 | 圖表 | recharts |
 | 通知 | sonner |
-| 後端框架 | NestJS 11 + Prisma 7 + PostgreSQL + Redis |
+| 後端框架 | NestJS 11 + Prisma 6 + PostgreSQL + Redis |
+| 內部管理後台 | AdminJS 7（獨立 `admin-api`，`@adminjs/prisma`） |
 | XRPL SDK | xrpl.js 3.x |
 | AI 推論 | Ollama / vLLM |
 
@@ -114,6 +115,7 @@ gkc-platform/
 │   │       ├── constants.ts       # 路由、AI 模型、節點資料、定價
 │   │       └── utils.ts
 ├── src/                           # NestJS API + production 靜態前端託管
+├── admin/                         # AdminJS admin-api（獨立程序，users 帳號管理）
 ├── server/                        # 過渡期 legacy Express routes/services（逐步收斂到 src/）
 ├── shared/                        # 共用型別
 ├── BACKEND_SPECIFICATION.md       # 後端 API 完整規格書

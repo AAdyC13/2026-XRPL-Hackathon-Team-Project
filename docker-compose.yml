@@ -45,5 +45,29 @@ services:
       retries: 3
       start_period: 40s
 
+  admin-api:
+    image: ghcr.io/aadyc13/2026-xrpl-hackathon-team-project:${IMAGE_TAG:-latest}
+    command: ["pnpm", "admin:start"]
+    env_file:
+      - .env
+    environment:
+      ADMIN_PORT: 3002
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.1.3:3002:3002"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3002/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\""
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
 volumes:
   pgdata:

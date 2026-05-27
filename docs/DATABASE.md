@@ -11,7 +11,9 @@ pnpm db:deploy           # CI / production: apply pending only
 
 On VPS, the app container runs `db:deploy` before start (see `scripts/docker-entrypoint.sh`). Run seeds manually when needed: `pnpm seed:db`. The production image runs `prisma generate` at **build time** and `chown`s `/app` to the `node` user so migrate does not fail on read-only `node_modules`.
 
-Runtime DB access uses Prisma 7 with `@prisma/adapter-pg` — see `server/db/index.ts` (`DATABASE_URL` required).
+Runtime DB access uses **Prisma 6.19.x** with `@prisma/adapter-pg` — see `server/db/index.ts` (`DATABASE_URL` required).
+
+> **Version note:** Prisma is pinned at 6.x because `@adminjs/prisma` v5 officially supports `@prisma/client` ^5 || ^6 only. `prisma/schema.prisma` declares `url = env("DATABASE_URL")` in the `datasource` block (required by Prisma 6 CLI); `prisma.config.ts` still holds migrations/seed paths.
 
 ## Bootstrap data (users, reference rows)
 
