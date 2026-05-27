@@ -64,5 +64,8 @@ jobs:
       - name: Apply database migrations
         run: pnpm db:deploy
 
-      - name: Type check (frontend)
+      - name: Type check
         run: pnpm check
+
+      - name: API tests
+        run: pnpm test:api

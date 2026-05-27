@@ -1,0 +1,199 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DEPLOY_DIR="${DEPLOY_DIR:-$(pwd)}"
+ACTION="${1:-${ACTION:-verify}}"
+COMPOSE_ENV="${COMPOSE_ENV:-deploy.env}"
+PREVIOUS_ENV="${PREVIOUS_ENV:-deploy.env.previous}"
+VERIFY_ATTEMPTS="${VERIFY_ATTEMPTS:-9}"
+VERIFY_INTERVAL="${VERIFY_INTERVAL:-20}"
+VERIFY_RESTART_LIMIT="${VERIFY_RESTART_LIMIT:-2}"
+VERIFY_FAIL_LIMIT="${VERIFY_FAIL_LIMIT:-2}"
+VERIFY_REQUIRED_SUCCESSES="${VERIFY_REQUIRED_SUCCESSES:-3}"
+
+cd "$DEPLOY_DIR"
+
+log() {
+  printf '[%s] %s\n' "$(date -Is)" "$*"
+}
+
+read_image_tag() {
+  local env_file="$1"
+
+  if [ ! -f "$env_file" ]; then
+    return 1
+  fi
+
+  sed -n 's/^IMAGE_TAG=//p' "$env_file" | tail -n 1 | tr -d '\r'
+}
+
+container_id() {
+  local service="$1"
+  docker compose --env-file "$COMPOSE_ENV" ps -q "$service"
+}
+
+container_status() {
+  local container="$1"
+  docker inspect "$container" --format '{{.State.Status}}'
+}
+
+restart_count() {
+  local container="$1"
+  docker inspect "$container" --format '{{.RestartCount}}'
+}
+
+assert_running() {
+  local service="$1"
+  local container
+  local status
+
+  container="$(container_id "$service")"
+  if [ -z "$container" ]; then
+    log "service $service has no container"
+    return 1
+  fi
+
+  status="$(container_status "$container")"
+  if [ "$status" != "running" ]; then
+    log "service $service is $status"
+    return 1
+  fi
+}
+
+check_app_health() {
+  docker compose --env-file "$COMPOSE_ENV" exec -T app node -e '
+    fetch("http://127.0.0.1:3000/health")
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok || body.ok !== true || !body.data || body.data.database !== "ok") {
+          console.error(JSON.stringify(body));
+          process.exit(1);
+        }
+        console.log(JSON.stringify(body));
+      })
+      .catch((error) => {
+        console.error(error);
+        process.exit(1);
+      });
+  '
+}
+
+verify_deploy() {
+  local app_container
+  local initial_restarts=0
+  local current_restarts=0
+  local restart_delta=0
+  local consecutive_failures=0
+  local consecutive_successes=0
+  local attempt=1
+
+  app_container="$(container_id app || true)"
+  if [ -n "$app_container" ]; then
+    initial_restarts="$(restart_count "$app_container")"
+  fi
+
+  log "starting deploy verification: attempts=$VERIFY_ATTEMPTS interval=${VERIFY_INTERVAL}s restart_limit=$VERIFY_RESTART_LIMIT"
+
+  while [ "$attempt" -le "$VERIFY_ATTEMPTS" ]; do
+    log "verification attempt $attempt/$VERIFY_ATTEMPTS"
+
+    if assert_running postgres && assert_running app && check_app_health; then
+      app_container="$(container_id app)"
+      current_restarts="$(restart_count "$app_container")"
+      restart_delta=$((current_restarts - initial_restarts))
+
+      if [ "$restart_delta" -gt "$VERIFY_RESTART_LIMIT" ]; then
+        log "app restart count increased by $restart_delta, exceeding limit $VERIFY_RESTART_LIMIT"
+        consecutive_failures=$((consecutive_failures + 1))
+        consecutive_successes=0
+      else
+        log "health ok, app restart delta=$restart_delta"
+        consecutive_failures=0
+        consecutive_successes=$((consecutive_successes + 1))
+      fi
+    else
+      consecutive_failures=$((consecutive_failures + 1))
+      consecutive_successes=0
+      log "verification failed, consecutive_failures=$consecutive_failures"
+    fi
+
+    if [ "$consecutive_failures" -ge "$VERIFY_FAIL_LIMIT" ]; then
+      log "verification failed after $consecutive_failures consecutive failures"
+      return 1
+    fi
+
+    if [ "$attempt" -lt "$VERIFY_ATTEMPTS" ]; then
+      sleep "$VERIFY_INTERVAL"
+    fi
+
+    attempt=$((attempt + 1))
+  done
+
+  if [ "$consecutive_successes" -lt "$VERIFY_REQUIRED_SUCCESSES" ]; then
+    log "verification ended without $VERIFY_REQUIRED_SUCCESSES consecutive successful checks"
+    return 1
+  fi
+
+  log "deploy verification passed"
+}
+
+save_previous() {
+  local current_tag
+
+  current_tag="$(read_image_tag "$COMPOSE_ENV" || true)"
+  if [ -z "$current_tag" ]; then
+    log "no existing $COMPOSE_ENV with IMAGE_TAG; skipping previous tag save"
+    return 0
+  fi
+
+  cp "$COMPOSE_ENV" "$PREVIOUS_ENV"
+  log "saved previous deploy tag: $current_tag"
+}
+
+promote_previous() {
+  local current_tag
+
+  current_tag="$(read_image_tag "$COMPOSE_ENV")"
+  cp "$COMPOSE_ENV" "$PREVIOUS_ENV"
+  log "promoted deploy tag for future rollback: $current_tag"
+}
+
+rollback() {
+  local previous_tag
+
+  previous_tag="$(read_image_tag "$PREVIOUS_ENV" || true)"
+  if [ -z "$previous_tag" ]; then
+    log "no previous deploy tag found; cannot rollback"
+    return 1
+  fi
+
+  printf 'IMAGE_TAG=%s\n' "$previous_tag" > "$COMPOSE_ENV"
+  log "rolling back to deploy tag: $previous_tag"
+
+  docker compose --env-file "$COMPOSE_ENV" pull
+  docker compose --env-file "$COMPOSE_ENV" up -d --remove-orphans
+
+  VERIFY_ATTEMPTS="${ROLLBACK_VERIFY_ATTEMPTS:-3}" \
+  VERIFY_INTERVAL="${ROLLBACK_VERIFY_INTERVAL:-20}" \
+  VERIFY_REQUIRED_SUCCESSES="${ROLLBACK_VERIFY_REQUIRED_SUCCESSES:-2}" \
+    verify_deploy
+}
+
+case "$ACTION" in
+  save-previous)
+    save_previous
+    ;;
+  verify)
+    verify_deploy
+    ;;
+  rollback)
+    rollback
+    ;;
+  promote-previous)
+    promote_previous
+    ;;
+  *)
+    log "unknown action: $ACTION"
+    exit 2
+    ;;
+esac

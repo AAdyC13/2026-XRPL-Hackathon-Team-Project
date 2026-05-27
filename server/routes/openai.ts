@@ -47,8 +47,8 @@ openaiRouter.post('/chat/completions', authenticate, async (req: Request, res: R
   let provider: {
     id: string;
     displayName: string;
-    priceInputPer1k: number;
-    priceOutputPer1k: number;
+    priceInputPer1k: unknown;
+    priceOutputPer1k: unknown;
     endpointUrl: string | null;
     endpointSecret: string | null;
   } | null = null;

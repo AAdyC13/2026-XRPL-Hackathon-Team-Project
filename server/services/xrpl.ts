@@ -285,7 +285,7 @@ export async function createCheckFromIssuer(
   );
 
   const txHash = checkTx.result.hash;
-  const meta = checkTx.result.meta as Record<string, unknown>;
+  const meta = checkTx.result.meta as unknown as Record<string, unknown>;
   const nodes = (meta?.AffectedNodes ?? []) as Array<Record<string, unknown>>;
 
   let checkId: string | null = null;

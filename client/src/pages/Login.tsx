@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -28,10 +28,10 @@ export default function Login() {
     }
   };
 
-  // Redirect after login state is set
-  if (user) {
+  useEffect(() => {
+    if (!user) return;
     navigate(user.role === 'admin' ? '/admin' : '/dashboard');
-  }
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">

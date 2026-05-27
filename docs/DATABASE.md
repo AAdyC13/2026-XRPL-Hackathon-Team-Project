@@ -30,6 +30,7 @@ Demo credentials: `demo@gkc.edu.tw` / `password123`.
 3. Set `JWT_SECRET` (≥32 chars) and XRPL issuer secrets.
 4. Optional: `pnpm seed:db` inside the app container (or locally) for demo user and mock providers.
 5. First start applies migrations; later deploys only run pending migrations.
+6. GitHub Actions stores the last successful `IMAGE_TAG` as `deploy.env.previous` and can roll back the app image after a failed post-deploy health gate. This does **not** roll back already-applied Prisma migrations; fix database drift with a forward migration or a database backup restore.
 
 ## Test database
 
