@@ -46,6 +46,8 @@ services:
       start_period: 40s
 
   admin-api:
+    profiles:
+      - admin
     image: ghcr.io/aadyc13/2026-xrpl-hackathon-team-project:${IMAGE_TAG:-latest}
     command: ["pnpm", "admin:start"]
     env_file:

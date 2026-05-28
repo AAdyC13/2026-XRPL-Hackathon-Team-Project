@@ -62,12 +62,12 @@ pnpm build   # prisma generate → nest build → admin tsc → vite build
 
 VPS deploy（[`scripts/vps-post-deploy.sh`](../scripts/vps-post-deploy.sh)）：
 
-1. 部署前將現行 `deploy.env` 存為 `deploy.env.previous`
-2. `docker compose up` 新 `IMAGE_TAG`（commit SHA）
-3. **3 分鐘觀察期**（每 20s）：`app`/`postgres` running、`RestartCount` 增量、容器內 `GET /health`（`ok` 且 `database: ok`）
-4. 失敗 → 回滾 `deploy.env.previous` 並讓 workflow 失敗；成功 → 將本次 tag 寫入 `deploy.env.previous`
+1. 部署前將現行 `deploy.env` 與 `docker-compose.yml` 存為 `*.previous`
+2. `deploy.env` 含 `IMAGE_TAG`（commit SHA）與 `COMPOSE_PROFILES=admin`（啟用 `admin-api` profile）
+3. 首次健康檢查前預設暖機 **50s**（`db:deploy` + Nest 啟動），之後每 20s 重試，連續 4 次失敗才判定失敗
+4. 失敗 → 還原 `*.previous` 並 `compose up`；成功 → 將本次狀態寫入 `*.previous`
 
-`docker-compose.yml` 同映像可啟動 `app` 與 `admin-api` 兩個服務。`admin-api` 預設綁定 `127.0.1.3:3002`，建議由反向代理映射到獨立 admin 網域並加 IP allowlist / VPN。操作細節見 [ADMINJS.md](./ADMINJS.md)。
+`docker-compose.yml` 同映像可啟動 `app` 與 `admin-api`（profile `admin`）兩個服務。回滾到不含 AdminJS 的舊映像時，不會啟動 `admin-api`。`admin-api` 預設綁定 `127.0.1.3:3002`，建議由反向代理映射到獨立 admin 網域並加 IP allowlist / VPN。操作細節見 [ADMINJS.md](./ADMINJS.md)。
 
 ## API 文件
 
