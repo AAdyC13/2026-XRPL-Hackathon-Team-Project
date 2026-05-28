@@ -1,6 +1,6 @@
 # AdminJS 管理後台
 
-本專案使用獨立 `admin-api` 服務提供 AdminJS console。第一期只開放 `users` 帳號管理，不開放交易、充值、推論消費等營運表的直接 CRUD。
+本專案使用獨立 `admin-api` 服務提供 AdminJS console。開發階段採用 Prisma model 動態註冊，讓新增資料表可快速在後台做 CRUD 與觀察。
 
 與使用者 app（NestJS `src/`）分離：admin-api 有自己的 Express 進入點（`admin/index.ts`）、session 登入與 IP/rate limit，直接透過 Prisma 讀寫 PostgreSQL，不走 `/api/v1/admin/*` JWT API。
 
@@ -43,8 +43,21 @@ pnpm admin:dev
 | `verificationStatus` | 可編輯 |
 | `role` | 可編輯 |
 | `isActive` | 可編輯 |
+| `newPassword` | 僅 edit 可見，用於重設密碼（會寫入 `passwordHash`） |
 | `id`, `email`, `username`, `createdAt`, `updatedAt` | 唯讀 |
 | `passwordHash`, `xamanUserToken` | 隱藏 |
+
+## 多表動態資源註冊
+
+- `admin/resources.ts` 會透過 Prisma DMMF 掃描所有 models，自動產生 generic resource。
+- `User` 會以 `admin/user-resource.ts` 的特化設定覆蓋 generic resource。
+- 若未來新增 Prisma model，完成 migration / generate 後，重啟 `admin-api` 即可在後台看到新資源。
+
+### Generic 資源預設規則
+
+- 開啟預設 CRUD（list/show/edit/new/delete）。
+- 欄位名包含 `password` / `hash` / `secret` / `token` 預設隱藏。
+- 可在 `resourceActionDenyList` 針對特定 model 關閉 `new/delete`（保留擴充點）。
 
 ## 自訂操作
 
@@ -55,8 +68,15 @@ pnpm admin:dev
 | `reset` | `verificationStatus = pending`, 清空 `verifiedAt` |
 | `activate` | `isActive = true` |
 | `deactivate` | `isActive = false` |
+| `resetPassword` | 產生暫時密碼並更新 `passwordHash`（結果僅在成功通知顯示一次） |
 
 所有 action 會寫入結構化 console audit log。生產環境建議由容器 log pipeline 收集。
+
+## 驗證新增 model 是否自動接手
+
+1. 在 `prisma/schema.prisma` 新增 model 並執行 migration / generate。
+2. 重新啟動 `pnpm admin:dev`。
+3. 開啟 `/admin`，確認 navigation 的 `Database` 區塊出現新 model，且可進行 CRUD。
 
 ## 部署
 

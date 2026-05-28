@@ -1,5 +1,7 @@
 import { getModelByName } from "@adminjs/prisma";
 import type { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
+import { randomBytes } from "node:crypto";
 import type {
   Action,
   ActionRequest,
@@ -11,6 +13,7 @@ import type {
 import { auditAdminEvent } from "./audit.js";
 
 const editableUserProperties = ["verificationStatus", "role", "isActive"];
+const resetPasswordSchema = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 type ActionContext = {
   currentAdmin?: CurrentAdmin & { role?: string; email?: string };
@@ -64,6 +67,11 @@ function userAction(
   };
 }
 
+function getPayloadValue(payload: ActionRequest["payload"], key: string): string {
+  const value = payload?.[key];
+  return typeof value === "string" ? value.trim() : "";
+}
+
 export function createUserResource(prisma: PrismaClient): ResourceWithOptions {
   return {
     resource: {
@@ -90,11 +98,15 @@ export function createUserResource(prisma: PrismaClient): ResourceWithOptions {
         "createdAt",
         "updatedAt"
       ],
-      editProperties: editableUserProperties,
+      editProperties: [...editableUserProperties, "newPassword"],
       filterProperties: ["email", "username", "role", "verificationStatus", "isActive", "createdAt"],
       properties: {
         passwordHash: { isVisible: false },
         xamanUserToken: { isVisible: false },
+        newPassword: {
+          type: "password",
+          isVisible: { list: false, show: false, edit: true, filter: false }
+        },
         id: { isTitle: false, isDisabled: true },
         email: { isTitle: true, isDisabled: true },
         username: { isDisabled: true },
@@ -126,9 +138,21 @@ export function createUserResource(prisma: PrismaClient): ResourceWithOptions {
         bulkDelete: { isAccessible: false },
         edit: {
           before: async (request: ActionRequest) => {
-            request.payload = Object.fromEntries(
-              Object.entries(request.payload ?? {}).filter(([key]) => editableUserProperties.includes(key))
+            const payload = request.payload ?? {};
+            const nextPayload: Record<string, unknown> = Object.fromEntries(
+              Object.entries(payload).filter(([key]) => editableUserProperties.includes(key))
             );
+
+            const newPassword = getPayloadValue(payload, "newPassword");
+            if (newPassword) {
+              if (!resetPasswordSchema.test(newPassword)) {
+                throw new Error("Password must include uppercase, lowercase, and number with minimum 8 chars.");
+              }
+
+              nextPayload.passwordHash = await bcrypt.hash(newPassword, 12);
+            }
+
+            request.payload = nextPayload;
             return request;
           },
           after: async (response: ActionResponse, request: ActionRequest, context: ActionContext) => {
@@ -138,6 +162,41 @@ export function createUserResource(prisma: PrismaClient): ResourceWithOptions {
               fields: Object.keys(request.payload ?? {})
             });
             return response;
+          }
+        },
+        resetPassword: {
+          actionType: "record",
+          icon: "Password",
+          guard: "Reset password for this user?",
+          component: false,
+          handler: async (
+            _request: ActionRequest,
+            _response: ActionResponse,
+            context: ActionContext
+          ): Promise<ActionResponse> => {
+            assertAdmin(context);
+
+            const record = context.record;
+            if (!record) {
+              throw new Error("User record not found.");
+            }
+
+            const temporaryPassword = `${randomBytes(4).toString("hex")}Aa1!`;
+            const passwordHash = await bcrypt.hash(temporaryPassword, 12);
+            await record.update({ passwordHash });
+
+            auditAdminEvent("user_reset_password", {
+              userId: record.id(),
+              admin: context.currentAdmin?.email
+            });
+
+            return {
+              record: record.toJSON(context.currentAdmin),
+              notice: {
+                message: `Temporary password: ${temporaryPassword}`,
+                type: "success"
+              }
+            };
           }
         },
         approve: userAction("approve", { verificationStatus: "verified", verifiedAt: new Date() }, "Approve user"),

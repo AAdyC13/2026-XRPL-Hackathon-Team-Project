@@ -8,7 +8,7 @@ import { authenticateAdmin } from "./auth.js";
 import { auditAdminEvent } from "./audit.js";
 import { adminIpAllowlist, adminRateLimit } from "./security.js";
 import { createPrismaClient, disconnectPrismaClient } from "../src/prisma/create-prisma-client.js";
-import { createUserResource } from "./user-resource.js";
+import { buildAdminResources } from "./resources.js";
 
 AdminJS.registerAdapter({ Database, Resource });
 
@@ -32,7 +32,7 @@ async function bootstrap() {
       companyName: "GKC Admin",
       withMadeWithLove: false
     },
-    resources: [createUserResource(prisma)]
+    resources: buildAdminResources(prisma)
   });
 
   const sessionOptions: session.SessionOptions = {
