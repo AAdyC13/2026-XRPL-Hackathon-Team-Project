@@ -27,12 +27,13 @@ Demo credentials: `demo@gkc.edu.tw` / `password123`.
 
 ### VPS checklist
 
-1. `docker compose up -d` (postgres + app).
+1. `docker compose --env-file deploy.env up -d` (postgres + app; `admin-api` 需 `COMPOSE_PROFILES=admin`，見 `deploy.env`)。
 2. `.env` on server with `DATABASE_URL=postgresql://gkc:gkc@postgres:5432/gkc_platform` (host **`postgres`**, not `localhost`).
 3. Set `JWT_SECRET` (≥32 chars) and XRPL issuer secrets.
-4. Optional: `pnpm seed:db` inside the app container (or locally) for demo user and mock providers.
-5. First start applies migrations; later deploys only run pending migrations.
-6. GitHub Actions stores the last successful `IMAGE_TAG` as `deploy.env.previous` and can roll back the app image after a failed post-deploy health gate. This does **not** roll back already-applied Prisma migrations; fix database drift with a forward migration or a database backup restore.
+4. 若 secret 含 `$` 字元，在 VPS `.env` 內寫成 `$$`（Docker Compose 會把單個 `$` 當變數插值，日誌可能出現 `variable is not set` 並截斷密碼）。
+5. Optional: `pnpm seed:db` inside the app container (or locally) for demo user and mock providers.
+6. First start applies migrations; later deploys only run pending migrations.
+7. GitHub Actions 會將成功部署的 `deploy.env` 與 `docker-compose.yml` 存為 `*.previous`；健康檢查失敗時還原兩者並回滾映像。這**不會**還原已套用的 Prisma migration；請用 forward migration 或備份還原處理 schema 漂移。
 
 ## Test database
 

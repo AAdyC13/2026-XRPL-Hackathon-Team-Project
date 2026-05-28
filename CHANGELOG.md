@@ -6,6 +6,12 @@
 
 ## [未發布] — 2026-05-27
 
+### 修復
+
+- **VPS 部署驗證**：`vps-post-deploy.sh` 新增預設 50s 暖機、放寬連續失敗門檻，避免 `db:deploy` 後過早 `ECONNREFUSED` 觸發誤判回滾
+- **Compose 回滾**：部署前一併保存/還原 `docker-compose.yml`；`admin-api` 改為 profile `admin`，僅在 `deploy.env` 含 `COMPOSE_PROFILES=admin` 時啟動，避免映像回滾後 `admin:start` 不存在而重啟迴圈
+- **文件**：VPS `.env` 含 `$` 時須寫成 `$$`（Docker Compose 插值）
+
 ### 新增
 
 #### AdminJS 管理後台（admin-api）

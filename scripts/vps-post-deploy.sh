@@ -5,16 +5,33 @@ DEPLOY_DIR="${DEPLOY_DIR:-$(pwd)}"
 ACTION="${1:-${ACTION:-verify}}"
 COMPOSE_ENV="${COMPOSE_ENV:-deploy.env}"
 PREVIOUS_ENV="${PREVIOUS_ENV:-deploy.env.previous}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
+PREVIOUS_COMPOSE="${PREVIOUS_COMPOSE:-docker-compose.yml.previous}"
 VERIFY_ATTEMPTS="${VERIFY_ATTEMPTS:-9}"
 VERIFY_INTERVAL="${VERIFY_INTERVAL:-20}"
+VERIFY_WARMUP_SECONDS="${VERIFY_WARMUP_SECONDS:-50}"
 VERIFY_RESTART_LIMIT="${VERIFY_RESTART_LIMIT:-2}"
-VERIFY_FAIL_LIMIT="${VERIFY_FAIL_LIMIT:-2}"
+VERIFY_FAIL_LIMIT="${VERIFY_FAIL_LIMIT:-4}"
 VERIFY_REQUIRED_SUCCESSES="${VERIFY_REQUIRED_SUCCESSES:-3}"
 
 cd "$DEPLOY_DIR"
 
 log() {
   printf '[%s] %s\n' "$(date -Is)" "$*"
+}
+
+load_deploy_env() {
+  if [ -f "$COMPOSE_ENV" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . "$COMPOSE_ENV"
+    set +a
+  fi
+}
+
+compose_cmd() {
+  load_deploy_env
+  docker compose --env-file "$COMPOSE_ENV" "$@"
 }
 
 read_image_tag() {
@@ -29,7 +46,7 @@ read_image_tag() {
 
 container_id() {
   local service="$1"
-  docker compose --env-file "$COMPOSE_ENV" ps -q "$service"
+  compose_cmd ps -q "$service"
 }
 
 container_status() {
@@ -61,7 +78,7 @@ assert_running() {
 }
 
 check_app_health() {
-  docker compose --env-file "$COMPOSE_ENV" exec -T app node -e '
+  compose_cmd exec -T app node -e '
     fetch("http://127.0.0.1:3000/health")
       .then(async (response) => {
         const body = await response.json().catch(() => ({}));
@@ -92,7 +109,12 @@ verify_deploy() {
     initial_restarts="$(restart_count "$app_container")"
   fi
 
-  log "starting deploy verification: attempts=$VERIFY_ATTEMPTS interval=${VERIFY_INTERVAL}s restart_limit=$VERIFY_RESTART_LIMIT"
+  log "starting deploy verification: warmup=${VERIFY_WARMUP_SECONDS}s attempts=$VERIFY_ATTEMPTS interval=${VERIFY_INTERVAL}s fail_limit=$VERIFY_FAIL_LIMIT restart_limit=$VERIFY_RESTART_LIMIT"
+
+  if [ "$VERIFY_WARMUP_SECONDS" -gt 0 ]; then
+    log "waiting ${VERIFY_WARMUP_SECONDS}s for db:deploy and nest start"
+    sleep "$VERIFY_WARMUP_SECONDS"
+  fi
 
   while [ "$attempt" -le "$VERIFY_ATTEMPTS" ]; do
     log "verification attempt $attempt/$VERIFY_ATTEMPTS"
@@ -122,6 +144,11 @@ verify_deploy() {
       return 1
     fi
 
+    if [ "$consecutive_successes" -ge "$VERIFY_REQUIRED_SUCCESSES" ]; then
+      log "deploy verification passed"
+      return 0
+    fi
+
     if [ "$attempt" -lt "$VERIFY_ATTEMPTS" ]; then
       sleep "$VERIFY_INTERVAL"
     fi
@@ -129,12 +156,8 @@ verify_deploy() {
     attempt=$((attempt + 1))
   done
 
-  if [ "$consecutive_successes" -lt "$VERIFY_REQUIRED_SUCCESSES" ]; then
-    log "verification ended without $VERIFY_REQUIRED_SUCCESSES consecutive successful checks"
-    return 1
-  fi
-
-  log "deploy verification passed"
+  log "verification ended without $VERIFY_REQUIRED_SUCCESSES consecutive successful checks"
+  return 1
 }
 
 save_previous() {
@@ -147,6 +170,9 @@ save_previous() {
   fi
 
   cp "$COMPOSE_ENV" "$PREVIOUS_ENV"
+  if [ -f "$COMPOSE_FILE" ]; then
+    cp "$COMPOSE_FILE" "$PREVIOUS_COMPOSE"
+  fi
   log "saved previous deploy tag: $current_tag"
 }
 
@@ -155,26 +181,44 @@ promote_previous() {
 
   current_tag="$(read_image_tag "$COMPOSE_ENV")"
   cp "$COMPOSE_ENV" "$PREVIOUS_ENV"
+  if [ -f "$COMPOSE_FILE" ]; then
+    cp "$COMPOSE_FILE" "$PREVIOUS_COMPOSE"
+  fi
   log "promoted deploy tag for future rollback: $current_tag"
+}
+
+compose_up() {
+  compose_cmd pull
+  compose_cmd up -d --remove-orphans
 }
 
 rollback() {
   local previous_tag
 
-  previous_tag="$(read_image_tag "$PREVIOUS_ENV" || true)"
+  if [ -f "$PREVIOUS_ENV" ]; then
+    previous_tag="$(read_image_tag "$PREVIOUS_ENV" || true)"
+  else
+    previous_tag=""
+  fi
+
   if [ -z "$previous_tag" ]; then
     log "no previous deploy tag found; cannot rollback"
     return 1
   fi
 
-  printf 'IMAGE_TAG=%s\n' "$previous_tag" > "$COMPOSE_ENV"
+  cp "$PREVIOUS_ENV" "$COMPOSE_ENV"
+  if [ -f "$PREVIOUS_COMPOSE" ]; then
+    cp "$PREVIOUS_COMPOSE" "$COMPOSE_FILE"
+    log "restored previous compose file"
+  fi
   log "rolling back to deploy tag: $previous_tag"
 
-  docker compose --env-file "$COMPOSE_ENV" pull
-  docker compose --env-file "$COMPOSE_ENV" up -d --remove-orphans
+  compose_up
 
-  VERIFY_ATTEMPTS="${ROLLBACK_VERIFY_ATTEMPTS:-3}" \
+  VERIFY_WARMUP_SECONDS="${ROLLBACK_VERIFY_WARMUP_SECONDS:-45}" \
+  VERIFY_ATTEMPTS="${ROLLBACK_VERIFY_ATTEMPTS:-5}" \
   VERIFY_INTERVAL="${ROLLBACK_VERIFY_INTERVAL:-20}" \
+  VERIFY_FAIL_LIMIT="${ROLLBACK_VERIFY_FAIL_LIMIT:-4}" \
   VERIFY_REQUIRED_SUCCESSES="${ROLLBACK_VERIFY_REQUIRED_SUCCESSES:-2}" \
     verify_deploy
 }
@@ -185,6 +229,9 @@ case "$ACTION" in
     ;;
   verify)
     verify_deploy
+    ;;
+  up)
+    compose_up
     ;;
   rollback)
     rollback
