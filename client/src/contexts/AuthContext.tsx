@@ -1,5 +1,11 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { authApi } from '../lib/api';
+import {
+  ACCOUNT_POLICY_MESSAGES_ZH,
+  isValidPassword,
+  isValidUsername,
+  toZhAccountPolicyMessage
+} from '../policies/account-policy';
 
 export interface AuthUser {
   id: string;
@@ -86,8 +92,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (username: string, email: string, password: string) => {
     if (!username || !email || !password) throw new Error('請填寫所有欄位');
-    if (password.length < 8) throw new Error('密碼至少需要 8 個字元');
-    const res = await authApi.register(username, email, password);
+    if (!isValidUsername(username)) throw new Error(ACCOUNT_POLICY_MESSAGES_ZH.usernameInvalid);
+    if (!isValidPassword(password)) throw new Error(ACCOUNT_POLICY_MESSAGES_ZH.passwordInvalid);
+    let res;
+    try {
+      res = await authApi.register(username, email, password);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(toZhAccountPolicyMessage(error.message));
+      }
+      throw error;
+    }
     const authUser: AuthUser = {
       id: res.user.id,
       username: res.user.username,

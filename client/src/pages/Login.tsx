@@ -22,7 +22,8 @@ export default function Login() {
       await login(email, password);
       toast.success('登入成功，歡迎回來！');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '登入失敗');
+      const message = err instanceof Error && err.message.trim() ? err.message : '登入失敗';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

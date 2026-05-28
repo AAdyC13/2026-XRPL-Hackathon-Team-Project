@@ -43,9 +43,16 @@ pnpm admin:dev
 | `verificationStatus` | 可編輯 |
 | `role` | 可編輯 |
 | `isActive` | 可編輯 |
-| `newPassword` | 僅 edit 可見，用於重設密碼（會寫入 `passwordHash`） |
-| `id`, `email`, `username`, `createdAt`, `updatedAt` | 唯讀 |
+| `newPassword` | `new`/`edit` 可見，提交後轉為 `passwordHash` |
+| `email`, `username` | `new` 可填；既有帳號在 edit 不可改 |
+| `id`, `createdAt`, `updatedAt` | 唯讀 |
 | `passwordHash`, `xamanUserToken` | 隱藏 |
+
+帳密政策（`username/password`）採單一來源，位於 `src/auth/policies/account-policy.ts`。AdminJS `newPassword` 與主系統註冊流程使用同一套規則。
+
+`admin/user-resource.ts` 透過 `editProperties` 納入 `username`、`email`、`newPassword`、
+`role`、`verificationStatus`、`isActive`，確保 `User -> New` 表單一定可填帳號與 email。
+既有帳號在 `edit` 嘗試提交 `username`、`email` 時，會被 `edit.before` 過濾，不會寫入資料庫。
 
 ## 多表動態資源註冊
 
@@ -69,6 +76,8 @@ pnpm admin:dev
 | `activate` | `isActive = true` |
 | `deactivate` | `isActive = false` |
 | `resetPassword` | 產生暫時密碼並更新 `passwordHash`（結果僅在成功通知顯示一次） |
+| `new` | 可由 Admin 建立帳號；需提供 `username`/`email`/`newPassword` |
+| `delete` / `bulkDelete` | 可直接刪除帳號（hard delete，含確認 guard） |
 
 所有 action 會寫入結構化 console audit log。生產環境建議由容器 log pipeline 收集。
 

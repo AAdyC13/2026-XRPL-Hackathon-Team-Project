@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Zap, Mail, Lock, User, Clock } from 'lucide-react';
+import { ACCOUNT_POLICY_MESSAGES_ZH } from '@/policies/account-policy';
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -29,7 +30,7 @@ export default function Register() {
       await register(username, email, password);
       setRegistered(true);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : '註冊失敗');
+      toast.error(err instanceof Error ? err.message : '註冊失敗，請稍後再試');
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +104,7 @@ export default function Register() {
                     maxLength={64}
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">{ACCOUNT_POLICY_MESSAGES_ZH.usernameInvalid}</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">電子郵件</Label>
@@ -134,6 +136,7 @@ export default function Register() {
                     minLength={8}
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">{ACCOUNT_POLICY_MESSAGES_ZH.passwordInvalid}</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">確認密碼</Label>

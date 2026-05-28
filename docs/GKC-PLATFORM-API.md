@@ -31,6 +31,8 @@
 ### `POST /api/v1/auth/register`
 
 建立新帳號。帳號初始 `verificationStatus` 為 `pending`，需等待管理員審核。
+帳密政策由單一模組維護：`src/auth/policies/account-policy.ts`（Auth API 與 AdminJS 共用）。
+前端註冊頁會先做 UX 預檢（`client/src/policies/account-policy.ts`），但後端驗證仍是最終裁決。
 
 **Request Body**
 

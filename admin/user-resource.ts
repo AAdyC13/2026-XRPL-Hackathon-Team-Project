@@ -2,6 +2,11 @@ import { getModelByName } from "@adminjs/prisma";
 import type { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { randomBytes } from "node:crypto";
+import {
+  ACCOUNT_POLICY_MESSAGES,
+  isValidPassword,
+  isValidUsername
+} from "../src/auth/policies/account-policy.js";
 import type {
   Action,
   ActionRequest,
@@ -13,7 +18,6 @@ import type {
 import { auditAdminEvent } from "./audit.js";
 
 const editableUserProperties = ["verificationStatus", "role", "isActive"];
-const resetPasswordSchema = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 type ActionContext = {
   currentAdmin?: CurrentAdmin & { role?: string; email?: string };
@@ -98,7 +102,7 @@ export function createUserResource(prisma: PrismaClient): ResourceWithOptions {
         "createdAt",
         "updatedAt"
       ],
-      editProperties: [...editableUserProperties, "newPassword"],
+      editProperties: ["username", "email", ...editableUserProperties, "newPassword"],
       filterProperties: ["email", "username", "role", "verificationStatus", "isActive", "createdAt"],
       properties: {
         passwordHash: { isVisible: false },
@@ -107,9 +111,9 @@ export function createUserResource(prisma: PrismaClient): ResourceWithOptions {
           type: "password",
           isVisible: { list: false, show: false, edit: true, filter: false }
         },
-        id: { isTitle: false, isDisabled: true },
-        email: { isTitle: true, isDisabled: true },
-        username: { isDisabled: true },
+        id: { isTitle: false, isDisabled: true, isVisible: { list: false, show: true, edit: false, filter: false } },
+        email: { isTitle: true },
+        username: {},
         gkcBalance: { isDisabled: true },
         xrpBalance: { isDisabled: true },
         xrpAddress: { isDisabled: true },
@@ -133,9 +137,58 @@ export function createUserResource(prisma: PrismaClient): ResourceWithOptions {
         }
       },
       actions: {
-        new: { isAccessible: false },
-        delete: { isAccessible: false },
-        bulkDelete: { isAccessible: false },
+        new: {
+          before: async (request: ActionRequest) => {
+            const payload = request.payload ?? {};
+            const username = getPayloadValue(payload, "username");
+            const email = getPayloadValue(payload, "email");
+            const newPassword = getPayloadValue(payload, "newPassword");
+
+            if (!username || !email || !newPassword) {
+              throw new Error("username, email and newPassword are required.");
+            }
+
+            if (!isValidUsername(username)) {
+              throw new Error(ACCOUNT_POLICY_MESSAGES.usernameInvalid);
+            }
+
+            if (!isValidPassword(newPassword)) {
+              throw new Error(ACCOUNT_POLICY_MESSAGES.passwordInvalid);
+            }
+
+            const nextPayload: Record<string, unknown> = {
+              username,
+              email,
+              passwordHash: await bcrypt.hash(newPassword, 12),
+              role: getPayloadValue(payload, "role") || "user",
+              verificationStatus: getPayloadValue(payload, "verificationStatus") || "pending",
+              isActive: payload.isActive === "false" ? false : payload.isActive === "true" ? true : true
+            };
+
+            request.payload = nextPayload;
+            return request;
+          },
+          after: async (response: ActionResponse, _request: ActionRequest, context: ActionContext) => {
+            auditAdminEvent("user_create", {
+              userId: context.record?.id(),
+              admin: context.currentAdmin?.email
+            });
+            return response;
+          }
+        },
+        delete: {
+          guard: "Delete this user account permanently?",
+          after: async (response: ActionResponse, _request: ActionRequest, context: ActionContext) => {
+            auditAdminEvent("user_delete", {
+              userId: context.record?.id(),
+              admin: context.currentAdmin?.email
+            });
+            return response;
+          }
+        },
+        bulkDelete: {
+          guard: "Bulk delete selected user accounts permanently?"
+        },
         edit: {
           before: async (request: ActionRequest) => {
             const payload = request.payload ?? {};
@@ -145,8 +198,8 @@ export function createUserResource(prisma: PrismaClient): ResourceWithOptions {
 
             const newPassword = getPayloadValue(payload, "newPassword");
             if (newPassword) {
-              if (!resetPasswordSchema.test(newPassword)) {
-                throw new Error("Password must include uppercase, lowercase, and number with minimum 8 chars.");
+              if (!isValidPassword(newPassword)) {
+                throw new Error(ACCOUNT_POLICY_MESSAGES.passwordInvalid);
               }
 
               nextPayload.passwordHash = await bcrypt.hash(newPassword, 12);

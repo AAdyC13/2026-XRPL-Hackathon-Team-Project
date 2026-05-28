@@ -3,11 +3,11 @@ import { JwtService } from "@nestjs/jwt";
 import bcrypt from "bcrypt";
 import { UsersService } from "../users/users.service.js";
 import { AuthUserProfile, JwtPayload } from "./auth.types.js";
-
-const registerSchema = {
-  username: /^[a-zA-Z0-9_]{3,64}$/,
-  password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/
-};
+import {
+  ACCOUNT_POLICY_MESSAGES,
+  isValidPassword,
+  isValidUsername
+} from "./policies/account-policy.js";
 
 @Injectable()
 export class AuthService {
@@ -47,17 +47,17 @@ export class AuthService {
   }
 
   async register(input: { username: string; email: string; password: string }) {
-    if (!registerSchema.username.test(input.username)) {
+    if (!isValidUsername(input.username)) {
       throw new BadRequestException({
         code: "INVALID_PARAMS",
-        message: "Username must be 3-64 chars with letters, numbers, underscores."
+        message: ACCOUNT_POLICY_MESSAGES.usernameInvalid
       });
     }
 
-    if (!registerSchema.password.test(input.password)) {
+    if (!isValidPassword(input.password)) {
       throw new BadRequestException({
         code: "INVALID_PARAMS",
-        message: "Password must include uppercase, lowercase, and number with minimum 8 chars."
+        message: ACCOUNT_POLICY_MESSAGES.passwordInvalid
       });
     }
 
