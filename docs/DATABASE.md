@@ -23,7 +23,7 @@ Script: `server/scripts/seed-db.ts` (idempotent — skips existing demo user / p
 pnpm seed:db
 ```
 
-Demo credentials: `demo@gkc.edu.tw` / `password123`.
+Demo credentials: `demo@gkc.edu.tw` / `Demo1234`.
 
 ### VPS checklist
 

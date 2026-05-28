@@ -2,7 +2,7 @@
  * server/scripts/seed-db.ts
  * ─────────────────────────────────────────────────────
  * Seeds the database with:
- *  - 1 demo user  (demo@gkc.edu.tw / password123)
+ *  - 1 demo user  (demo@gkc.edu.tw / Demo1234)
  *  - 6 mock AI providers (matching the frontend mock data)
  *
  * Usage: pnpm run seed:db
@@ -16,7 +16,7 @@ import { prisma } from '../db/index.js';
 
 // ── Demo User ──────────────────────────────────────────────────────────────
 
-const DEMO_PASSWORD = 'password123';
+const DEMO_PASSWORD = 'Demo1234';
 const DEMO_EMAIL = 'demo@gkc.edu.tw';
 /** Stable UUID for idempotent seed (schema uses @db.Uuid). */
 const DEMO_USER_ID = '00000000-0000-4000-a000-000000000001';
@@ -40,7 +40,7 @@ if (!existingUser) {
       xrpBalance: 128.50,
     },
   });
-  console.log('✓ Demo user created: demo@gkc.edu.tw / password123');
+  console.log('✓ Demo user created: demo@gkc.edu.tw / Demo1234');
 } else {
   const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
   await prisma.user.update({

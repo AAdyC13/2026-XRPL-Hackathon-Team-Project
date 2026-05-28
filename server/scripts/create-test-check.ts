@@ -77,7 +77,7 @@ console.log('   Check ID :', checkId);
 console.log('   SendMax  :', sendMaxGkc, 'GKC');
 console.log('\n── Insert into DB (run in server shell) ──────────────────────────');
 console.log(`
-$T = (Invoke-RestMethod 'http://localhost:3001/api/v1/auth/login' -Method POST -ContentType 'application/json' -Body '{"email":"demo@gkc.edu.tw","password":"password123"}').token
+$T = (Invoke-RestMethod 'http://localhost:3001/api/v1/auth/login' -Method POST -ContentType 'application/json' -Body '{"email":"demo@gkc.edu.tw","password":"Demo1234"}').token
 # Use the Check ID below when opening a session:
 # check_id will be inserted by the route when you call /wallet/check/status/:uuid
 # OR manually via:

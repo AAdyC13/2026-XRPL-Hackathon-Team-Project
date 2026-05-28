@@ -66,7 +66,7 @@ pnpm test
 | 欄位 | 值 |
 |------|-----|
 | Email | `demo@gkc.edu.tw` |
-| 密碼 | `Demo12345678` |
+| 密碼 | `Demo1234` |
 
 > 由 `pnpm seed:db` 寫入。生產環境容器啟動時自動 `migrate`；seed 需手動執行，詳見 [docs/DATABASE.md](./docs/DATABASE.md)。
 
