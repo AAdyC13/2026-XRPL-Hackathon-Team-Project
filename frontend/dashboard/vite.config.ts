@@ -10,6 +10,7 @@ const repoRoot = path.resolve(__dirname, "../..");
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, repoRoot, "");
   const apiOrigin = `http://localhost:${env.PORT ?? "3001"}`;
+  const port = Number(env.DEV_DASHBOARD_PORT) || 5173;
 
   return {
     base: "/app/",
@@ -23,7 +24,7 @@ export default defineConfig(({ mode }) => {
     },
     root: __dirname,
     server: {
-      port: 5173,
+      port,
       proxy: {
         "/api": apiOrigin,
         "/health": apiOrigin,
