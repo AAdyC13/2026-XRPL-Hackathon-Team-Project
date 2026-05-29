@@ -6,6 +6,12 @@
 
 ## [未發布] — 2026-05-27
 
+### 變更
+
+- **前端目錄重構**：`client/` → `frontend/dashboard/`；新增 `frontend/homepage/`（GridCore 官網）
+- **路由**：官網佔 `/`；Dashboard 改為 `/app/*`（`vite` `base: /app/`、`wouter` `Router base="/app"`）
+- **建置**：`pnpm build:homepage` → `pnpm build:dashboard`；`src/main.ts` 增加 `/app` SPA fallback
+
 ### 修復
 
 - **VPS 部署驗證**：`vps-post-deploy.sh` 新增預設 50s 暖機、放寬連續失敗門檻，避免 `db:deploy` 後過早 `ECONNREFUSED` 觸發誤判回滾

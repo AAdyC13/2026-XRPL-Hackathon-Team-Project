@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Zap, Mail, Lock, User, Clock } from 'lucide-react';
+import { ROUTES } from '@/lib/constants';
 import { ACCOUNT_POLICY_MESSAGES_ZH } from '@/policies/account-policy';
 
 export default function Register() {
@@ -58,7 +59,7 @@ export default function Register() {
                 <p className="font-medium">您的帳號目前正在等待管理員審核</p>
                 <p className="text-muted-foreground">審核通過後，您將可以連接 Xaman 錢包並使用所有功能。</p>
               </div>
-              <Button className="w-full" onClick={() => navigate('/dashboard')}>
+              <Button className="w-full" onClick={() => navigate(ROUTES.DASHBOARD)}>
                 前往 Dashboard
               </Button>
             </CardContent>
@@ -165,7 +166,7 @@ export default function Register() {
 
             <p className="mt-4 text-center text-sm text-muted-foreground">
               已有帳戶？{' '}
-              <Link href="/login" className="text-primary hover:underline font-medium">
+              <Link href={ROUTES.LOGIN} className="text-primary hover:underline font-medium">
                 立即登入
               </Link>
             </p>

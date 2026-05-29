@@ -143,8 +143,12 @@ export const NODE_STATUS_COLORS = {
 
 // 路由路徑
 export const ROUTES = {
-  HOME: '/',
+  HOME: '/dashboard',
+  LOGIN: '/login',
+  REGISTER: '/register',
   DASHBOARD: '/dashboard',
+  ADMIN: '/admin',
+  ADMIN_USERS: '/admin/users',
   AI_INFERENCE: '/ai-inference',
   WALLET: '/wallet',
   NODES: '/nodes',

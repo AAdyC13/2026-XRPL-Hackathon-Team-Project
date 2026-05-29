@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { SAMPLE_GPU_NODES } from '@/lib/constants';
+import { ROUTES, SAMPLE_GPU_NODES } from '@/lib/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowUpRight, ArrowDownLeft, Zap, Activity, Wallet } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -61,7 +61,7 @@ export default function Dashboard() {
                     <p className="text-sm text-muted-foreground">前往錢包頁面綁定 Xaman 錢包，即可啟用 GKC 功能。</p>
                   </div>
                 </div>
-                <Link href="/wallet">
+                <Link href={ROUTES.WALLET}>
                   <Button size="sm" className="shrink-0">前往綁定</Button>
                 </Link>
               </div>

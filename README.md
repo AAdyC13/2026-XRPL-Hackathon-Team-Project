@@ -7,10 +7,11 @@
 
 ## 部署架構
 
-推送到 `main` 分支時，GitHub Actions 透過 `deploy-vps.yml` 建置映像並以 `docker compose --env-file deploy.env` 部署到 VPS（`127.0.1.3:3000`：Nest API + `client/` 靜態檔）。部署後會觀察 3 分鐘並在健康檢查失敗時回滾到上一個成功映像；伺服器 `.env` 的 `DATABASE_URL` 請用 Compose 服務名 `postgres`，見 [docs/DATABASE.md](docs/DATABASE.md)、[docs/BACKEND.md](docs/BACKEND.md)。
+推送到 `main` 分支時，GitHub Actions 透過 `deploy-vps.yml` 建置映像並以 `docker compose --env-file deploy.env` 部署到 VPS（`127.0.1.3:3000`：Nest API + `frontend/` 靜態檔）。部署後會觀察 3 分鐘並在健康檢查失敗時回滾到上一個成功映像；伺服器 `.env` 的 `DATABASE_URL` 請用 Compose 服務名 `postgres`，見 [docs/DATABASE.md](docs/DATABASE.md)、[docs/BACKEND.md](docs/BACKEND.md)。
 
-- `client/`：GKC 平台 UI，由 `pnpm build` 打包到 `dist/public`
-- `src/`：NestJS API 進入點與模組，production 會 serve `dist/public`
+- `frontend/homepage/`：GridCore 官網，build 至 `dist/public/`（`/`）
+- `frontend/dashboard/`：GKC 使用者平台 SPA，build 至 `dist/public/app/`（`/app/*`）
+- `src/`：NestJS API 進入點與模組，production 會 serve `dist/public/`（官網）與 `dist/public/app/`（Dashboard）
 - `client-legacy/`：舊 XRPL demo client，只作本地參考，不進 Docker build，也不部署到 VPS
 - `3001` 獨立前端部署已停用，不再使用 `/opt/xrpl-frontend`
 
@@ -51,7 +52,8 @@ pnpm seed:db
 
 # 開發伺服器
 # API: http://localhost:3000
-# 新版前端: http://localhost:5173
+# 官網: http://localhost:5174
+# Dashboard: http://localhost:5173/app
 pnpm dev
 
 # 舊 XRPL demo（選用）
@@ -94,26 +96,10 @@ pnpm test
 
 ```
 gkc-platform/
-├── client/                        # 前端 (React + TypeScript)
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Login.tsx          # 登入頁
-│   │   │   ├── Register.tsx       # 註冊頁
-│   │   │   ├── Dashboard.tsx      # 儀表板
-│   │   │   ├── AIInference.tsx    # AI 推論
-│   │   │   ├── Wallet.tsx         # 錢包 + TrustLine + Payment Channel + AMM
-│   │   │   ├── Nodes.tsx          # 算力節點管理 + Benchmark
-│   │   │   ├── ComputeRental.tsx  # 算力出租市場 + Escrow
-│   │   │   └── Transactions.tsx   # 交易記錄 + XRPL 連結
-│   │   ├── contexts/
-│   │   │   ├── AuthContext.tsx    # JWT 認證狀態管理
-│   │   │   └── ThemeContext.tsx   # 深色/淺色主題
-│   │   ├── components/
-│   │   │   ├── Layout.tsx         # 側邊欄導航（含用戶資訊）
-│   │   │   └── ui/                # shadcn/ui 組件
-│   │   └── lib/
-│   │       ├── constants.ts       # 路由、AI 模型、節點資料、定價
-│   │       └── utils.ts
+├── frontend/
+│   ├── homepage/                  # GridCore 官網 (Vite + React)
+│   └── dashboard/                 # GKC 平台 SPA (React + TypeScript)
+│       └── src/                   # pages、components、contexts…
 ├── src/                           # NestJS API + production 靜態前端託管
 ├── admin/                         # AdminJS admin-api（獨立程序，Prisma 多表動態 CRUD + User 特化）
 ├── server/                        # 過渡期 legacy Express routes/services（逐步收斂到 src/）
@@ -270,17 +256,19 @@ MIT License — 高科大算力實驗室
 ## File Structure
 
 ```
-client/
-  public/       ← Small configuration files ONLY (favicon.ico, robots.txt). DO NOT put images/media here.
-  src/
-    pages/      ← Page-level components
-    components/ ← Reusable UI & shadcn/ui
-    contexts/   ← React contexts
-    hooks/      ← Custom React hooks
-    lib/        ← Utility helpers
-    App.tsx     ← Routes & top-level layout
-    main.tsx    ← React entry point
-    index.css   ← global style
+frontend/
+  homepage/     ← GridCore 官網（Vite + React，build → dist/public/）
+  dashboard/    ← GKC 平台 SPA（base /app/，build → dist/public/app/）
+    public/     ← Small configuration files ONLY (favicon.ico, robots.txt). DO NOT put images/media here.
+    src/
+      pages/      ← Page-level components
+      components/ ← Reusable UI & shadcn/ui
+      contexts/   ← React contexts
+      hooks/      ← Custom React hooks
+      lib/        ← Utility helpers
+      App.tsx     ← Routes & top-level layout
+      main.tsx    ← React entry point
+      index.css   ← global style
 server/         ← Placeholder for imported template compatibility
 shared/         ← Placeholder for imported template compatibility
   const.ts      ← Shared constants
@@ -288,24 +276,24 @@ shared/         ← Placeholder for imported template compatibility
 
 ### ⚠️ Handling Images & Media
 
-**DO NOT** store images, videos, or large assets in `client/public/` or `client/src/assets/`. Local media files will cause deployment timeouts.
+**DO NOT** store images, videos, or large assets in `frontend/dashboard/public/` or `frontend/dashboard/src/assets/`. Local media files will cause deployment timeouts.
 
 **Required workflow:**
 1. Upload assets using the CLI: `manus-upload-file --webdev path/to/image.png`
 2. Use the returned storage path directly in your code: `<img src="/manus-storage/image_a1b2c3d4.png" />`
 3. Store the original local file in `/home/ubuntu/webdev-static-assets/` (outside the project directory)
 
-Only small configuration files like `favicon.ico`, `robots.txt`, and `manifest.json` belong in `client/public/`.
+Only small configuration files like `favicon.ico`, `robots.txt`, and `manifest.json` belong in `frontend/dashboard/public/`.
 
-Files in `client/public` are available at the root of your site—reference them with absolute paths (`/robots.txt`, etc.) from HTML templates, JSX, or meta tags.
+Files in `frontend/dashboard/public` are available at the root of your site—reference them with absolute paths (`/robots.txt`, etc.) from HTML templates, JSX, or meta tags.
 
 ---
 
 ## 🎯 Development Workflow
 
-1. **Choose a design style** before you write any frontend code according to Design Guide (color, font, shadow, art style). Tell user what you chose. Remember to edit `client/src/index.css` for global theming and add needed font using google font cdn in `client/index.html`.
-2. **Compose pages** in `client/src/pages/`. Keep sections modular so they can be reused across routes.
-3. **Share primitives** via `client/src/components/`—extend shadcn/ui when needed instead of duplicating markup.
+1. **Choose a design style** before you write any frontend code according to Design Guide (color, font, shadow, art style). Tell user what you chose. Remember to edit `frontend/dashboard/src/index.css` for global theming and add needed font using google font cdn in `frontend/dashboard/index.html`.
+2. **Compose pages** in `frontend/dashboard/src/pages/`. Keep sections modular so they can be reused across routes.
+3. **Share primitives** via `frontend/dashboard/src/components/`—extend shadcn/ui when needed instead of duplicating markup.
 4. **Keep styling consistent** by relying on existing Tailwind tokens (spacing, colors, typography).
 5. **Fetch external data** with `useEffect` if the site needs dynamic content from public APIs.
 ---
@@ -315,10 +303,10 @@ Files in `client/public` are available at the root of your site—reference them
 **UI & Styling:**
 - Prefer shadcn/ui components for interactions to keep a modern, consistent look; import from `@/components/ui/*` (e.g., `button`, `card`, `dialog`).
 - Compose Tailwind utilities with component variants for layout and states; avoid excessive custom CSS. Use built-in `variant`, `size`, etc. where available.
-- Preserve design tokens: keep the `@layer base` rules in `client/src/index.css`. Utilities like `border-border` and `font-sans` depend on them.
+- Preserve design tokens: keep the `@layer base` rules in `frontend/dashboard/src/index.css`. Utilities like `border-border` and `font-sans` depend on them.
 - Consistent design language: use spacing, radius, shadows, and typography via tokens. Extract shared UI into `components/` for reuse instead of copy‑paste.
 - Accessibility and responsiveness: keep visible focus rings and ensure keyboard reachability; design mobile‑first with thoughtful breakpoints.
-- Theming: Choose dark/light theme to start with for ThemeProvider according to your design style (dark or light bg), then manage colors pallette with CSS variables in `client/src/index.css` instead of hard‑coding to keep global consistency.
+- Theming: Choose dark/light theme to start with for ThemeProvider according to your design style (dark or light bg), then manage colors pallette with CSS variables in `frontend/dashboard/src/index.css` instead of hard‑coding to keep global consistency.
 - Micro‑interactions and empty states: add motion, empty states, and icons tastefully to improve quality without distracting from content.
 - Navigation: For internal tools/admin panels, use persistent sidebar. For public-facing apps, design navigation based on content structure (top nav, side nav, or contextual)—ensure clear escape routes from all pages.
 - Placeholder UI elements: When adding structural placeholders (nav items, CTAs) for not-yet-implemented features, show toast on click ("Feature coming soon"). Inform user which elements are placeholders when presenting work.
@@ -367,7 +355,7 @@ Bake motion taste in from the first line of code. Snappy, physically intuitive i
 Before implementing UI features, check if these components already exist:
 
 Maps:
-- `client/src/components/Map.tsx` - Google Maps integration with proxy authentication. Provides MapView component with onMapReady callback for initializing Google Maps services (Places, Geocoder, Directions, Drawing, etc.). All map functionality works directly in the browser.
+- `frontend/dashboard/src/components/Map.tsx` - Google Maps integration with proxy authentication. Provides MapView component with onMapReady callback for initializing Google Maps services (Places, Geocoder, Directions, Drawing, etc.). All map functionality works directly in the browser.
 
 When implementing features that match these categories, MUST evaluate the component first to decide whether to use or customize it.
 
@@ -378,7 +366,7 @@ When implementing features that match these categories, MUST evaluate the compon
 **CRITICAL: The Manus proxy provides FULL access to ALL Google Maps features** - including advanced drawing, heatmaps, Street View, all layers, Places API, etc. Do NOT ask users for Google Map API keys - authentication is automatic.
 
 **Implementation:**
-- Frontend: Import MapView from `client/src/components/Map.tsx` and initialize ANY Google Maps service (geocoding, directions, places, drawing, visualization, geometry, etc.) in the onMapReady callback. ALL Google Maps JavaScript API features work directly in the browser.
+- Frontend: Import MapView from `frontend/dashboard/src/components/Map.tsx` and initialize ANY Google Maps service (geocoding, directions, places, drawing, visualization, geometry, etc.) in the onMapReady callback. ALL Google Maps JavaScript API features work directly in the browser.
 
 NEVER use external map libraries or request API keys from users - the Manus proxy handles everything automatically with no feature limitations.
 
@@ -496,7 +484,7 @@ NEVER use external map libraries or request API keys from users - the Manus prox
 }
 ```
 
-`client/src/App.tsx`
+`frontend/dashboard/src/App.tsx`
 ```tsx
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -542,36 +530,9 @@ function App() {
 export default App;
 ```
 
-`client/src/pages/Home.tsx`
-```tsx
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+`frontend/homepage/src/App.tsx` 為 GridCore 官網入口；Dashboard 路由見 `frontend/dashboard/src/App.tsx`（`Router base="/app"`，無獨立 Home 頁）。
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Best Practices, Design Guide and Common Pitfalls
- */
-export default function Home() {
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-
-  return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
-    </div>
-  );
-}
-```
-
-`client/src/index.css`
+`frontend/dashboard/src/index.css`
 ```tsx
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -752,7 +713,7 @@ export default function Home() {
 }
 ```
 
-`client/index.html`
+`frontend/dashboard/index.html`
 ```tsx
 <!doctype html>
 <html lang="en">

@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Moon, Sun, ShieldCheck, LayoutDashboard, Users, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { Button } from './ui/button';
+import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 interface AdminLayoutProps {
@@ -16,7 +17,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate(ROUTES.LOGIN);
   };
 
   return (
@@ -49,8 +50,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
-          <NavLink href="/admin" exact icon={<LayoutDashboard className="w-5 h-5" />} label="概覽" />
-          <NavLink href="/admin/users" icon={<Users className="w-5 h-5" />} label="用戶審核" />
+          <NavLink href={ROUTES.ADMIN} exact icon={<LayoutDashboard className="w-5 h-5" />} label="概覽" />
+          <NavLink href={ROUTES.ADMIN_USERS} icon={<Users className="w-5 h-5" />} label="用戶審核" />
         </nav>
 
         {/* Footer */}

@@ -4,7 +4,7 @@
 
 ## 執行模型
 
-主要 app 程序由 **NestJS 11** 啟動，並掛載部分 **Express 路由**（`server/legacy/`）與靜態前端（`dist/public`）。內部管理後台由獨立 **AdminJS admin-api** 程序啟動，共用 PostgreSQL，但不掛進使用者 app 流量。
+主要 app 程序由 **NestJS 11** 啟動，並掛載部分 **Express 路由**（`server/legacy/`）與靜態前端（`dist/public/` 官網 + `dist/public/app/` Dashboard）。內部管理後台由獨立 **AdminJS admin-api** 程序啟動，共用 PostgreSQL，但不掛進使用者 app 流量。
 
 | 層級 | 路徑 | 職責 |
 |------|------|------|
@@ -16,16 +16,17 @@
 
 Production app 啟動：`node dist/src/main.js`（見 `package.json` 的 `start`）。Admin 啟動：`node dist/admin/index.js`（見 `admin:start`）。
 
-開發：`pnpm dev` = `nest start --watch` + Vite。Admin console：`pnpm admin:dev`，預設 `http://localhost:3002/admin`。
+開發：`pnpm dev` = `nest start --watch` + 官網 Vite（`:5174`）+ Dashboard Vite（`:5173/app`）。Admin console：`pnpm admin:dev`，預設 `http://localhost:3002/admin`。
 
 ## 建置與映像
 
 ```bash
-pnpm build   # prisma generate → nest build → admin tsc → vite build
+pnpm build   # prisma generate → nest build → admin tsc → pnpm build:frontend
 ```
 
 - 後端編譯輸出：`dist/src/`、`dist/server/`（legacy 一併編譯）、`dist/admin/`
-- 前端輸出：`dist/public/`
+- 前端輸出：`dist/public/`（官網 `index.html`）+ `dist/public/app/`（Dashboard SPA）
+- `FRONTEND_URL` 須含 `/app` 後綴（供 XUMM `return_url`）
 - Docker：[`Dockerfile`](../Dockerfile) builder 跑 `pnpm build`；runner 可執行 [`scripts/docker-entrypoint.sh`](../scripts/docker-entrypoint.sh)（`db:deploy` → `pnpm start`）或 `pnpm admin:start`
 
 ## 環境變數

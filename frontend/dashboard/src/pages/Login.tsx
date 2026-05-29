@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { ROUTES } from '@/lib/constants';
 import { Zap, Mail, Lock } from 'lucide-react';
 
 export default function Login() {
@@ -31,7 +32,7 @@ export default function Login() {
 
   useEffect(() => {
     if (!user) return;
-    navigate(user.role === 'admin' ? '/admin' : '/dashboard');
+    navigate(user.role === 'admin' ? ROUTES.ADMIN : ROUTES.DASHBOARD);
   }, [user, navigate]);
 
   return (
@@ -96,7 +97,7 @@ export default function Login() {
 
             <p className="mt-4 text-center text-sm text-muted-foreground">
               還沒有帳戶？{' '}
-              <Link href="/register" className="text-primary hover:underline font-medium">
+              <Link href={ROUTES.REGISTER} className="text-primary hover:underline font-medium">
                 立即註冊
               </Link>
             </p>

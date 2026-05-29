@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import express from "express";
 import path from "node:path";
 import { AppModule } from "./app.module.js";
@@ -10,7 +11,7 @@ import { connectDb, disconnectDb } from "../server/db/index.js";
 import { attachWebSocketServer, initMockProviders } from "../server/services/mock-tunnel.js";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
 
   app.useGlobalFilters(new ApiExceptionFilter());
 
@@ -20,6 +21,11 @@ async function bootstrap() {
 
   const staticPath = path.resolve(process.cwd(), "dist", "public");
   app.use(express.static(staticPath));
+
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.get(["/app", "/app/*"], (_req: express.Request, res: express.Response) => {
+    res.sendFile(path.join(staticPath, "app", "index.html"));
+  });
 
   await connectDb();
   attachWebSocketServer(app.getHttpServer());

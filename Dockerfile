@@ -7,9 +7,9 @@ COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 RUN pnpm install --frozen-lockfile
 
-COPY tsconfig.json tsconfig.node.json tsconfig.backend.json vite.config.ts components.json prisma.config.ts nest-cli.json ./
+COPY tsconfig.json tsconfig.node.json tsconfig.backend.json components.json prisma.config.ts nest-cli.json ./
 COPY prisma ./prisma
-COPY client ./client
+COPY frontend ./frontend
 COPY server ./server
 COPY shared ./shared
 COPY src ./src
