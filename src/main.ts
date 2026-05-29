@@ -23,7 +23,8 @@ async function bootstrap() {
   app.use(express.static(staticPath));
 
   const expressApp = app.getHttpAdapter().getInstance();
-  expressApp.get(["/app", "/app/*"], (_req: express.Request, res: express.Response) => {
+  // path-to-regexp v8 (Express 5): named brace wildcard, not legacy `/app/*`
+  expressApp.get(["/app", "/app/{*path}"], (_req: express.Request, res: express.Response) => {
     res.sendFile(path.join(staticPath, "app", "index.html"));
   });
 
