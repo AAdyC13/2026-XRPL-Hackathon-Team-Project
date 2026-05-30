@@ -116,5 +116,9 @@ temp/
 client/public/__manus__/version.json
 .project-config.json
 
+# Homepage public assets (local or CDN only — do not commit media files)
+frontend/homepage/public/*
+!frontend/homepage/public/.gitkeep
+
 # Local git worktree (Nest era reference; do not commit)
 _worktree-nest-ref/

@@ -1,9 +1,15 @@
-import { appPath } from "../lib/appLinks";
+import GkcMark from "./GkcMark";
+import HeroGridCanvas from "./HeroGridCanvas";
+
+function scrollToFlow(cls: "buy" | "sell") {
+  const el = document.querySelector<HTMLElement>(`.flow-header.${cls}`);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+}
 
 export default function Hero() {
   return (
     <section id="hero">
-      <div className="grid-bg" />
+      <HeroGridCanvas />
       <div className="hero-glow" />
       <div className="hero-glow-amber" />
 
@@ -15,38 +21,42 @@ export default function Hero() {
       </h1>
 
       <p className="hero-sub">
-        連接校園內的閒置 GPU 與真實算力需求，以高科幣（GKC）作為算力憑證，在 XRPL 鏈上完成透明、非託管的結算。
+        連接校園內的閒置 GPU 與真實算力需求，以
+        <span className="gkc-phrase">
+          高科幣（<GkcMark />）
+        </span>
+        作為算力憑證，在 XRPL 鏈上完成透明、非託管的結算。
       </p>
 
       <div className="hero-ctas">
-        <a href={appPath("/register")} className="btn-primary">
+        <button className="btn-primary" onClick={() => scrollToFlow("buy")}>
           我要買算力
-        </a>
-        <a href={appPath("/nodes")} className="btn-secondary">
+        </button>
+        <button className="btn-secondary" onClick={() => scrollToFlow("sell")}>
           我要賣算力
-        </a>
+        </button>
       </div>
 
-      <div className="hero-stats">
-        <div className="stat">
-          <span className="stat-num" id="stat1">
-            0
-          </span>
-          <span className="stat-label">上鏈節點</span>
-        </div>
-        <div className="stat">
-          <span className="stat-num" id="stat2">
-            0
-          </span>
-          <span className="stat-label">GKC 流通量</span>
-        </div>
-        <div className="stat">
-          <span className="stat-num" id="stat3">
-            0
-          </span>
-          <span className="stat-label">合作院校</span>
+      <div className="hero-stats-wrap">
+        <span className="demo-badge">DEMO DATA</span>
+        <div className="hero-stats">
+          <div className="stat">
+            <span className="stat-num" id="stat1">0</span>
+            <span className="stat-label">在線用戶</span>
+          </div>
+          <div className="stat">
+            <span className="stat-num" id="stat2">0</span>
+            <span className="stat-label">
+              <GkcMark /> 流通量
+            </span>
+          </div>
+          <div className="stat">
+            <span className="stat-num" id="stat3">0</span>
+            <span className="stat-label">合作院校</span>
+          </div>
         </div>
       </div>
+
     </section>
   );
 }

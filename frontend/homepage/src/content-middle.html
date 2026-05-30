@@ -6,34 +6,44 @@
     <p class="section-desc reveal">平台同時服務兩種需求。選擇你的身份，進入對應的使用路徑。</p>
 
     <div class="path-cards">
-      <div class="path-card buyer reveal">
+      <div class="path-card buyer reveal mobile-collapsible">
         <div class="path-tag">BUYER</div>
-        <span class="path-icon">⚡</span>
-        <h3 class="path-title">我要用算力</h3>
-        <p class="path-desc">以市場價格取得真實 GPU 算力或 AI 模型推理服務。不需要自購硬體，按需付費，GKC 結算透明上鏈。</p>
-        <ul class="path-features">
-          <li>AI 模型 API 服務，按 Token 計費</li>
-          <li>GPU 算力租用，按小時計費</li>
-          <li>GKC 付款，3–5 秒鏈上結算</li>
-          <li>學術網路優先接入，低延遲</li>
-        </ul>
+        <button type="button" class="path-head mobile-collapsible-trigger" aria-expanded="false">
+          <span class="path-icon">⚡</span>
+          <h3 class="path-title">我要用算力</h3>
+          <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="mobile-collapsible-panel">
+          <p class="path-desc">以市場價格取得真實 GPU 算力或 AI 模型推理服務。不需要自購硬體，按需付費，GKC 結算透明上鏈。</p>
+          <ul class="path-features">
+            <li>AI 模型 API 服務，按 Token 計費</li>
+            <li>GPU 算力租用，按小時計費</li>
+            <li>GKC 付款，3–5 秒鏈上結算</li>
+            <li>學術網路優先接入，低延遲</li>
+          </ul>
+        </div>
         <svg class="path-card-corner" viewBox="0 0 80 80" fill="none">
           <circle cx="80" cy="80" r="60" stroke="#00c8ff" stroke-width="1"/>
           <circle cx="80" cy="80" r="40" stroke="#00c8ff" stroke-width="0.5"/>
         </svg>
       </div>
 
-      <div class="path-card seller reveal reveal-delay-1">
+      <div class="path-card seller reveal reveal-delay-1 mobile-collapsible">
         <div class="path-tag">SELLER</div>
-        <span class="path-icon">💰</span>
-        <h3 class="path-title">我要賣算力</h3>
-        <p class="path-desc">讓閒置的個人電腦或實驗室 GPU 在你不使用時上線賺取 GKC，雙退出路徑保障你的收益變現。</p>
-        <ul class="path-features">
-          <li>個體戶：個人閒置 PC，輪班上線</li>
-          <li>專業戶：實驗室 GPU，長期穩定供給</li>
-          <li>自訂掛單價格，市場機制定價</li>
-          <li>DEX 交易或向平台贖回，雙路退出</li>
-        </ul>
+        <button type="button" class="path-head mobile-collapsible-trigger" aria-expanded="false">
+          <span class="path-icon">💰</span>
+          <h3 class="path-title">我要賣算力</h3>
+          <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="mobile-collapsible-panel">
+          <p class="path-desc">讓閒置的個人電腦或實驗室 GPU 在你不使用時上線賺取 GKC，雙退出路徑保障你的收益變現。</p>
+          <ul class="path-features">
+            <li>個體戶：個人閒置 PC，輪班上線</li>
+            <li>專業戶：實驗室 GPU，長期穩定供給</li>
+            <li>自訂掛單價格，市場機制定價</li>
+            <li>DEX 交易或向平台贖回，雙路退出</li>
+          </ul>
+        </div>
         <svg class="path-card-corner" viewBox="0 0 80 80" fill="none">
           <circle cx="80" cy="80" r="60" stroke="#f5a623" stroke-width="1"/>
           <circle cx="80" cy="80" r="40" stroke="#f5a623" stroke-width="0.5"/>
@@ -52,9 +62,12 @@
   <p class="section-desc reveal">無論買方或賣方，流程極簡。連接錢包後即可上線。</p>
 
   <div class="flows">
-    <div class="flow-track reveal">
-      <div class="flow-header buy">// 買方流程</div>
-      <div class="flow-steps buy">
+    <div class="flow-track reveal mobile-collapsible">
+      <button type="button" class="flow-header buy mobile-collapsible-trigger" aria-expanded="false">
+        <span class="flow-header-text">// 買方流程</span>
+        <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+      </button>
+      <div class="flow-steps buy mobile-collapsible-panel">
         <div class="flow-step">
           <div class="step-left">
             <div class="step-num">01</div>
@@ -87,9 +100,12 @@
       </div>
     </div>
 
-    <div class="flow-track reveal reveal-delay-1">
-      <div class="flow-header sell">// 賣方流程</div>
-      <div class="flow-steps sell">
+    <div class="flow-track reveal reveal-delay-1 mobile-collapsible">
+      <button type="button" class="flow-header sell mobile-collapsible-trigger" aria-expanded="false">
+        <span class="flow-header-text">// 賣方流程</span>
+        <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+      </button>
+      <div class="flow-steps sell mobile-collapsible-panel">
         <div class="flow-step">
           <div class="step-left">
             <div class="step-num">01</div>
@@ -146,22 +162,31 @@
       </div>
 
       <div class="token-props reveal reveal-delay-1">
-        <div class="token-prop">
-          <div class="token-prop-title">⚡ 算力錨定</div>
-          <div class="token-prop-body">1 GKC ≥ 可贖回一個標準算力單位。價值來自真實算力供給，不 peg 法幣，不 peg XRP。供給固定上限 1,000 億顆，私鑰銷毀後無人能增發。</div>
+        <div class="token-prop mobile-collapsible">
+          <button type="button" class="token-prop-title mobile-collapsible-trigger" aria-expanded="false">
+            <span class="token-prop-title-text">⚡ 算力錨定</span>
+            <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="token-prop-body mobile-collapsible-panel">1 GKC ≥ 可贖回一個標準算力單位。價值來自真實算力供給，不 peg 法幣，不 peg XRP。供給固定上限 1,000 億顆，私鑰銷毀後無人能增發。</div>
         </div>
-        <div class="token-prop">
-          <div class="token-prop-title">📈 不對稱保底設計</div>
-          <div class="token-prop-body">平台永遠保障 GKC 的贖回地板（賣方安全網），但不壓制天花板。當算力需求 > 釋放速度，DEX 市價自然反映稀缺，實現價格發現。</div>
+        <div class="token-prop mobile-collapsible">
+          <button type="button" class="token-prop-title mobile-collapsible-trigger" aria-expanded="false">
+            <span class="token-prop-title-text">📈 不對稱保底設計</span>
+            <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="token-prop-body mobile-collapsible-panel">平台永遠保障 GKC 的贖回地板（賣方安全網），但不壓制天花板。當算力需求 > 釋放速度，DEX 市價自然反映稀缺，實現價格發現。</div>
         </div>
-        <div class="token-prop">
-          <div class="token-prop-title">🔁 雙退出路徑</div>
-          <div class="token-prop-body">① DEX 市場自由交易，換取 XRP 後可橋接至 RLUSD 或法幣。② 向發行方贖回，兌換等值算力服務。兩條路徑確保持有者可自由離場。</div>
+        <div class="token-prop mobile-collapsible">
+          <button type="button" class="token-prop-title mobile-collapsible-trigger" aria-expanded="false">
+            <span class="token-prop-title-text">🔁 雙退出路徑</span>
+            <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="token-prop-body mobile-collapsible-panel">① DEX 市場自由交易，換取 XRP 後可橋接至 RLUSD 或法幣。② 向發行方贖回，兌換等值算力服務。兩條路徑確保持有者可自由離場。</div>
         </div>
 
         <div class="token-not">
-          <span>× 不是封閉積分</span>&nbsp;&nbsp;
-          <span>× 不是服務承諾券</span>&nbsp;&nbsp;
+          <span>× 不是封閉積分</span>
+          <span>× 不是服務承諾券</span>
           <span>× 不是 XRP 代用券</span>
         </div>
       </div>
@@ -179,90 +204,65 @@
 
   <div class="trust-grid">
     <div class="trust-steps reveal">
-      <div class="trust-step">
-        <div class="trust-step-num">01</div>
-        <div class="trust-step-content">
-          <div class="trust-step-title">掃描平台 QR Code</div>
-          <div class="trust-step-body">平台提供專屬 QR Code，引導你用 Xaman 錢包掃描，啟動 Trust Line 建立流程。</div>
-        </div>
+      <div class="trust-step mobile-collapsible">
+        <button type="button" class="trust-step-trigger mobile-collapsible-trigger" aria-expanded="false">
+          <span class="trust-step-num">01</span>
+          <span class="trust-step-title">掃描平台 QR Code</span>
+          <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="trust-step-body mobile-collapsible-panel">平台提供專屬 QR Code，引導你用 Xaman 錢包掃描，啟動 Trust Line 建立流程。</div>
       </div>
-      <div class="trust-step">
-        <div class="trust-step-num">02</div>
-        <div class="trust-step-content">
-          <div class="trust-step-title">Xaman 簽署授權</div>
-          <div class="trust-step-body">在 Xaman 非託管錢包中確認，建立你的 XRPL 地址與 GKC 發行方之間的信任關係。</div>
-        </div>
+      <div class="trust-step mobile-collapsible">
+        <button type="button" class="trust-step-trigger mobile-collapsible-trigger" aria-expanded="false">
+          <span class="trust-step-num">02</span>
+          <span class="trust-step-title">Xaman 簽署授權</span>
+          <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="trust-step-body mobile-collapsible-panel">在 Xaman 非託管錢包中確認，建立你的 XRPL 地址與 GKC 發行方之間的信任關係。</div>
       </div>
-      <div class="trust-step">
-        <div class="trust-step-num">03</div>
-        <div class="trust-step-content">
-          <div class="trust-step-title">學術身份驗證</div>
-          <div class="trust-step-body">完成學生證或院校帳號綁定，實名制准入。僅限合作院校成員，確保算力服務在受信任的學術社群內流通。</div>
-        </div>
+      <div class="trust-step mobile-collapsible">
+        <button type="button" class="trust-step-trigger mobile-collapsible-trigger" aria-expanded="false">
+          <span class="trust-step-num">03</span>
+          <span class="trust-step-title">學術身份驗證</span>
+          <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="trust-step-body mobile-collapsible-panel">完成學生證或院校帳號綁定，實名制准入。僅限合作院校成員，確保算力服務在受信任的學術社群內流通。</div>
       </div>
-      <div class="trust-step">
-        <div class="trust-step-num">04</div>
-        <div class="trust-step-content">
-          <div class="trust-step-title">取得 GKC 持有資格</div>
-          <div class="trust-step-body">Trust Line 建立後，你的錢包正式具備持有並消費 GKC 的資格。平台可精確管控誰能進場。</div>
-        </div>
-      </div>
-
-      <div class="xaman-badge">
-        <span class="xaman-dot"></span>
-        POWERED BY XAMAN WALLET · NON-CUSTODIAL
+      <div class="trust-step mobile-collapsible">
+        <button type="button" class="trust-step-trigger mobile-collapsible-trigger" aria-expanded="false">
+          <span class="trust-step-num">04</span>
+          <span class="trust-step-title">取得 GKC 持有資格</span>
+          <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="trust-step-body mobile-collapsible-panel">Trust Line 建立後，你的錢包正式具備持有並消費 GKC 的資格。平台可精確管控誰能進場。</div>
       </div>
     </div>
 
     <div class="trust-why reveal reveal-delay-1">
       <div class="trust-why-title">為什麼不直接用 XRP？</div>
-      <div class="why-item">
-        <strong>XRP 是全球開放資產</strong>，任何人都可以持有與轉帳，無法實現「僅認證學生可進場」的准入控制。
+      <div class="why-item mobile-collapsible">
+        <button type="button" class="why-item-trigger mobile-collapsible-trigger" aria-expanded="false">
+          <span class="why-item-lead"><strong>XRP 是全球開放資產</strong></span>
+          <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="why-item-rest mobile-collapsible-panel">，任何人都可以持有與轉帳，無法實現「僅認證學生可進場」的准入控制。</div>
       </div>
-      <div class="why-item">
-        <strong>GKC + Trust Line</strong> 讓平台可以限定進場資格——例如驗證 5 所合作院校的學生身份，才能持有並消費算力代幣。
+      <div class="why-item mobile-collapsible">
+        <button type="button" class="why-item-trigger mobile-collapsible-trigger" aria-expanded="false">
+          <span class="why-item-lead"><strong>GKC + Trust Line</strong></span>
+          <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="why-item-rest mobile-collapsible-panel">讓平台可以限定進場資格——例如驗證 5 所合作院校的學生身份，才能持有並消費算力代幣。</div>
       </div>
-      <div class="why-item">
-        <strong>實名制補上信用風險</strong>：欠費或違規行為可追溯至特定帳號，配合帳號層級的處置機制，使 Check 結算機制可信。
+      <div class="why-item mobile-collapsible">
+        <button type="button" class="why-item-trigger mobile-collapsible-trigger" aria-expanded="false">
+          <span class="why-item-lead"><strong>實名制補上信用風險</strong></span>
+          <span class="mobile-collapse-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="why-item-rest mobile-collapsible-panel">：欠費或違規行為可追溯至特定帳號，配合帳號層級的處置機制，使 Check 結算機制可信。</div>
       </div>
     </div>
   </div>
 </section>
-
-<div class="section-divider"></div>
-
-<!-- PARTNERS -->
-<div id="partners">
-  <div class="partners-inner">
-    <div class="section-label reveal" style="justify-content:center">PARTNERS</div>
-    <h2 class="section-title reveal" style="text-align:center">合作院校與供應方</h2>
-    <p class="section-desc reveal" style="text-align:center;margin:0 auto 0">算力由真實的學術機構與實驗室提供，不是虛擬的算力承諾。</p>
-
-    <div class="partner-grid reveal">
-      <div class="partner-cell">
-        <div class="partner-logo-placeholder">NTUST</div>
-        <div class="partner-name">國立臺灣<br>科技大學</div>
-      </div>
-      <div class="partner-cell">
-        <div class="partner-logo-placeholder">NTU</div>
-        <div class="partner-name">國立臺灣<br>大學</div>
-      </div>
-      <div class="partner-cell">
-        <div class="partner-logo-placeholder">NCTU</div>
-        <div class="partner-name">國立陽明<br>交通大學</div>
-      </div>
-      <div class="partner-cell">
-        <div class="partner-logo-placeholder">NTHU</div>
-        <div class="partner-name">國立清華<br>大學</div>
-      </div>
-      <div class="partner-cell">
-        <div class="partner-logo-placeholder">LAB+</div>
-        <div class="partner-name">簽約實驗室<br>供應方</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="section-divider"></div>
 
 
