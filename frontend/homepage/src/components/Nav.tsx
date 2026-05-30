@@ -27,7 +27,12 @@ export default function Nav() {
           <a href="#partners">合作院校與穩定供應方</a>
         </li>
       </ul>
-      <a href={appPath("/login")} className="nav-cta">
+      <a
+        href={appPath("/login")}
+        className="nav-cta"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         註冊/登入
       </a>
     </nav>
