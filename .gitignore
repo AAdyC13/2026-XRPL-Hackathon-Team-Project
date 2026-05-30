@@ -118,9 +118,10 @@ temp/
 client/public/__manus__/version.json
 .project-config.json
 
-# Homepage public assets (local or CDN only — do not commit media files)
+# Homepage public assets (partner logos: local/CDN; favicon is versioned for deploy)
 frontend/homepage/public/*
 !frontend/homepage/public/.gitkeep
+!frontend/homepage/public/cacp-favicon.ico
 
 # Local git worktree (Nest era reference; do not commit)
 _worktree-nest-ref/
