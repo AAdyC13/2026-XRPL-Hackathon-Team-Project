@@ -43,6 +43,11 @@ export class WalletController {
     return this.walletService.unbindWallet(this.userIdFromRequest(request));
   }
 
+  @Post("/rebind")
+  async rebindWallet(@Req() request: { user?: { userId?: string } }) {
+    return this.walletService.rebindWallet(this.userIdFromRequest(request));
+  }
+
   @Post("/trustline")
   async trustline(@Req() request: { user?: { userId?: string } }, @Body() body: unknown) {
     const payload = parseBody(trustlineBodySchema, body);

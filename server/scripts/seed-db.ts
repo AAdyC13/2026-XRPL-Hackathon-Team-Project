@@ -2,60 +2,136 @@
  * server/scripts/seed-db.ts
  * ─────────────────────────────────────────────────────
  * Seeds the database with:
- *  - 1 demo user  (demo@gkc.edu.tw / Demo1234)
- *  - 6 mock AI providers (matching the frontend mock data)
+ *  - demo_user_1 / demo_user_2（綁定 USER1/USER2 錢包地址）
+ *  - 6 mock AI providers（owner = demo_user_1）
+ *
+ * Removes legacy demo@gkc.edu.tw on each run.
  *
  * Usage: pnpm run seed:db
- * Safe to run multiple times (skips existing records).
  */
 
 import 'dotenv/config';
-import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { prisma } from '../db/index.js';
 
-// ── Demo User ──────────────────────────────────────────────────────────────
-
 const DEMO_PASSWORD = 'Demo1234';
-const DEMO_EMAIL = 'demo@gkc.edu.tw';
-/** Stable UUID for idempotent seed (schema uses @db.Uuid). */
-const DEMO_USER_ID = '00000000-0000-4000-a000-000000000001';
-// Use the GKC issuer address for demo — valid checksum, no trust line needed
-const DEMO_XRP_ADDRESS = process.env.GKC_ISSUER_ADDRESS ?? 'rBeY7pzk4siwXCb6XpVGj9nZ6FcQBdyh79';
+const LEGACY_DEMO_EMAIL = 'demo@gkc.edu.tw';
+const GKC_ISSUER = process.env.GKC_ISSUER_ADDRESS?.trim();
 
-(async () => {
-const existingUser = await prisma.user.findUnique({ where: { email: DEMO_EMAIL } });
-const demoId = existingUser?.id ?? DEMO_USER_ID;
-if (!existingUser) {
-  const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
-  await prisma.user.create({
-    data: {
-      id: demoId,
-      username: 'gkc_researcher',
-      email: DEMO_EMAIL,
-      passwordHash: hash,
-      role: 'node_owner',
-      xrpAddress: DEMO_XRP_ADDRESS,
-      gkcBalance: 2847.52,
-      xrpBalance: 128.50,
-    },
-  });
-  console.log('✓ Demo user created: demo@gkc.edu.tw / Demo1234');
-} else {
-  const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
-  await prisma.user.update({
-    where: { id: demoId },
-    data: { xrpAddress: DEMO_XRP_ADDRESS, passwordHash: hash },
-  });
-  console.log('· Demo user already exists — password and xrp_address refreshed');
+const DEMO_USER_1_ID = '00000000-0000-4000-a000-000000000001';
+const DEMO_USER_2_ID = '00000000-0000-4000-a000-000000000002';
+
+type DemoUserSeed = {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  xrpAddressEnv: string;
+};
+
+const DEMO_USERS: DemoUserSeed[] = [
+  {
+    id: DEMO_USER_1_ID,
+    username: 'demo_user_1',
+    email: 'demo_user_1@gkc.edu.tw',
+    role: 'node_owner',
+    xrpAddressEnv: 'USER1_WALLET_ADDRESS',
+  },
+  {
+    id: DEMO_USER_2_ID,
+    username: 'demo_user_2',
+    email: 'demo_user_2@gkc.edu.tw',
+    role: 'user',
+    xrpAddressEnv: 'USER2_WALLET_ADDRESS',
+  },
+];
+
+function resolveUserXrpAddress(envKey: string): string | null {
+  const address = process.env[envKey]?.trim();
+  if (!address) {
+    console.warn(`· ${envKey} 未設定 — 對應帳號 xrp_address 留空`);
+    return null;
+  }
+  if (GKC_ISSUER && address === GKC_ISSUER) {
+    console.warn(`· ${envKey} 不可與 GKC_ISSUER_ADDRESS 相同`);
+    return null;
+  }
+  return address;
 }
 
-// ── Mock Providers ─────────────────────────────────────────────────────────
+/** Delete rows that reference users without onDelete: Cascade. */
+async function purgeUserDependents(userId: string): Promise<void> {
+  await prisma.inferenceRecord.deleteMany({ where: { userId } });
+  await prisma.inferenceSession.deleteMany({ where: { userId } });
+  await prisma.paymentChannel.deleteMany({ where: { userId } });
+  await prisma.transaction.deleteMany({ where: { userId } });
+  await prisma.deposit.deleteMany({ where: { userId } });
+  await prisma.userCheck.deleteMany({ where: { userId } });
+  await prisma.apiKey.deleteMany({ where: { userId } });
+  await prisma.gpuNode.deleteMany({ where: { ownerId: userId } });
+  await prisma.aiProvider.deleteMany({ where: { ownerId: userId } });
+}
+
+async function removeLegacyDemoUser(): Promise<void> {
+  const legacy = await prisma.user.findUnique({ where: { email: LEGACY_DEMO_EMAIL } });
+  if (!legacy) return;
+
+  await purgeUserDependents(legacy.id);
+  await prisma.user.delete({ where: { id: legacy.id } });
+  console.log(`✓ Removed legacy account: ${LEGACY_DEMO_EMAIL}`);
+}
+
+async function upsertDemoUser(def: DemoUserSeed, passwordHash: string): Promise<void> {
+  const xrpAddress = resolveUserXrpAddress(def.xrpAddressEnv);
+  const existing = await prisma.user.findUnique({ where: { email: def.email } });
+
+  const baseData = {
+    username: def.username,
+    passwordHash,
+    role: def.role,
+    verificationStatus: 'verified' as const,
+    verifiedAt: new Date(),
+    isActive: true,
+    ...(xrpAddress !== null ? { xrpAddress } : {}),
+  };
+
+  if (!existing) {
+    await prisma.user.create({
+      data: {
+        id: def.id,
+        email: def.email,
+        ...baseData,
+        xrpAddress: xrpAddress ?? undefined,
+      },
+    });
+    console.log(`✓ Created ${def.email} / ${DEMO_PASSWORD}`);
+    return;
+  }
+
+  const xrpAddressUpdate =
+    xrpAddress ??
+    (GKC_ISSUER && existing.xrpAddress === GKC_ISSUER ? null : undefined);
+
+  await prisma.user.update({
+    where: { id: existing.id },
+    data: {
+      ...baseData,
+      ...(xrpAddressUpdate !== undefined ? { xrpAddress: xrpAddressUpdate } : {}),
+    },
+  });
+  console.log(
+    `· ${def.email} already exists — refreshed` +
+      (xrpAddressUpdate !== undefined
+        ? `, xrp_address → ${xrpAddressUpdate ?? '(cleared)'}`
+        : ''),
+  );
+}
+
+// ── Mock Providers (owner = demo_user_1) ───────────────────────────────────
 
 const MOCK_PROVIDERS = [
   {
     id: '00000000-0000-4000-a000-000000000101',
-    owner_id: demoId,
     display_name: 'TaiwanAI Node #1',
     gpu_type: 'RTX 4090',
     vram_gb: 24,
@@ -73,7 +149,6 @@ const MOCK_PROVIDERS = [
   },
   {
     id: '00000000-0000-4000-a000-000000000102',
-    owner_id: demoId,
     display_name: 'NTHU Research GPU',
     gpu_type: 'A100 80G',
     vram_gb: 80,
@@ -91,7 +166,6 @@ const MOCK_PROVIDERS = [
   },
   {
     id: '00000000-0000-4000-a000-000000000103',
-    owner_id: demoId,
     display_name: 'Home Server Pro',
     gpu_type: 'RTX 3090',
     vram_gb: 24,
@@ -109,7 +183,6 @@ const MOCK_PROVIDERS = [
   },
   {
     id: '00000000-0000-4000-a000-000000000104',
-    owner_id: demoId,
     display_name: 'Enterprise H100',
     gpu_type: 'H100 SXM',
     vram_gb: 80,
@@ -127,7 +200,6 @@ const MOCK_PROVIDERS = [
   },
   {
     id: '00000000-0000-4000-a000-000000000105',
-    owner_id: demoId,
     display_name: 'Budget Node Taiwan',
     gpu_type: 'RTX 4080 Super',
     vram_gb: 16,
@@ -145,7 +217,6 @@ const MOCK_PROVIDERS = [
   },
   {
     id: '00000000-0000-4000-a000-000000000106',
-    owner_id: demoId,
     display_name: 'Student Lab GPU',
     gpu_type: 'RTX 3080 Ti',
     vram_gb: 12,
@@ -163,41 +234,60 @@ const MOCK_PROVIDERS = [
   },
 ];
 
-let created = 0;
-let skipped = 0;
+(async () => {
+  await removeLegacyDemoUser();
 
-for (const p of MOCK_PROVIDERS) {
-  const exists = await prisma.aiProvider.findUnique({ where: { id: p.id } });
-  if (exists) { skipped++; continue; }
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  for (const user of DEMO_USERS) {
+    await upsertDemoUser(user, passwordHash);
+  }
 
-  const endpointToken = `gkc_ep_mock_${p.id}`;
-  await prisma.aiProvider.create({
-    data: {
-      id: p.id,
-      ownerId: p.owner_id,
-      displayName: p.display_name,
-      gpuType: p.gpu_type,
-      vramGb: p.vram_gb,
-      models: JSON.stringify(p.models),
-      priceInputPer1k: p.price_input_per_1k,
-      priceOutputPer1k: p.price_output_per_1k,
-      tokensPerSec: p.tokens_per_sec,
-      firstTokenMs: p.first_token_ms,
-      uptime30d: p.uptime_30d,
-      avgRating: p.avg_rating,
-      totalRequests: p.total_requests,
-      status: p.status,
-      currentLoad: p.current_load,
-      maxConcurrent: p.max_concurrent,
-      endpointToken: endpointToken,
-      verifiedAt: new Date(),
-    },
-  });
-  created++;
-}
+  let created = 0;
+  let skipped = 0;
 
-console.log(`✓ Providers: ${created} created, ${skipped} skipped`);
-console.log('\n✅ Seed complete. Start server: pnpm run server:dev');
+  for (const p of MOCK_PROVIDERS) {
+    const exists = await prisma.aiProvider.findUnique({ where: { id: p.id } });
+    if (exists) {
+      if (exists.ownerId !== DEMO_USER_1_ID) {
+        await prisma.aiProvider.update({
+          where: { id: p.id },
+          data: { ownerId: DEMO_USER_1_ID },
+        });
+        console.log(`· Provider ${p.display_name}: owner → demo_user_1`);
+      }
+      skipped++;
+      continue;
+    }
 
-await prisma.$disconnect();
+    await prisma.aiProvider.create({
+      data: {
+        id: p.id,
+        ownerId: DEMO_USER_1_ID,
+        displayName: p.display_name,
+        gpuType: p.gpu_type,
+        vramGb: p.vram_gb,
+        models: JSON.stringify(p.models),
+        priceInputPer1k: p.price_input_per_1k,
+        priceOutputPer1k: p.price_output_per_1k,
+        tokensPerSec: p.tokens_per_sec,
+        firstTokenMs: p.first_token_ms,
+        uptime30d: p.uptime_30d,
+        avgRating: p.avg_rating,
+        totalRequests: p.total_requests,
+        status: p.status,
+        currentLoad: p.current_load,
+        maxConcurrent: p.max_concurrent,
+        endpointToken: `gkc_ep_mock_${p.id}`,
+        verifiedAt: new Date(),
+      },
+    });
+    created++;
+  }
+
+  console.log(`✓ Providers: ${created} created, ${skipped} skipped`);
+  console.log('\n✅ Seed complete.');
+  console.log('   demo_user_1@gkc.edu.tw / Demo1234  (node_owner, mock providers)');
+  console.log('   demo_user_2@gkc.edu.tw / Demo1234  (user)');
+
+  await prisma.$disconnect();
 })();

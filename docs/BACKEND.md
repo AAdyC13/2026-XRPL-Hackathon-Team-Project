@@ -16,7 +16,7 @@
 
 Production app 啟動：`node dist/src/main.js`（見 `package.json` 的 `start`）。Admin 啟動：`node dist/admin/index.js`（見 `admin:start`）。
 
-開發：`pnpm dev` = `nest start --watch` + 官網 Vite（`:5174`）+ Dashboard Vite（`:5173/app`）。Admin console：`pnpm admin:dev`，預設 `http://localhost:3002/admin`。
+開發：`pnpm frontend` = 官網 Vite（`:5174`）+ Dashboard Vite（`:5173/app`）；`pnpm backend` = `nest start --watch`。Admin console：`pnpm admin:dev`，預設 `http://localhost:3002/admin`。
 
 ## 建置與映像
 
@@ -52,7 +52,7 @@ pnpm build   # prisma generate → nest build → admin tsc → pnpm build:front
 | `pnpm test` | Vitest 全量（unit + api） |
 | `pnpm test:api` | Health + Auth API（CI 使用） |
 
-測試 DB：`gkc_platform_test`；demo 密碼 `Demo12345678`（與 `test/helpers/db.ts` 一致）。
+測試 DB：`gkc_platform_test`；demo 密碼 `Demo1234`（與 `test/helpers/db.ts`、seed 一致）。
 
 ## CI / CD
 

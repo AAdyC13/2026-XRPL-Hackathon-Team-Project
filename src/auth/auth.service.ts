@@ -23,12 +23,7 @@ export class AuthService {
     role: string;
     xrpAddress: string | null;
     verificationStatus: string;
-    gkcBalance: { toNumber: () => number } | number;
-    xrpBalance: { toNumber: () => number } | number;
   }): AuthUserProfile {
-    const readNumber = (value: { toNumber: () => number } | number) =>
-      typeof value === "number" ? value : value.toNumber();
-
     return {
       id: user.id,
       username: user.username,
@@ -36,8 +31,6 @@ export class AuthService {
       role: user.role,
       xrpAddress: user.xrpAddress,
       verificationStatus: user.verificationStatus,
-      gkcBalance: readNumber(user.gkcBalance),
-      xrpBalance: readNumber(user.xrpBalance)
     };
   }
 

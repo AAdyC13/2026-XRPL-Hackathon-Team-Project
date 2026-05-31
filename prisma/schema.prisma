@@ -13,12 +13,11 @@ model User {
   email              String    @unique @db.VarChar(255)
   passwordHash       String    @map("password_hash") @db.VarChar(255)
   xrpAddress         String?   @unique @map("xrp_address") @db.VarChar(64)
-  gkcBalance         Decimal   @default(0) @map("gkc_balance") @db.Decimal(20, 8)
-  xrpBalance         Decimal   @default(0) @map("xrp_balance") @db.Decimal(20, 8)
   role               String    @default("user") @db.VarChar(20)
   verificationStatus String    @default("pending") @map("verification_status") @db.VarChar(20)
   verifiedAt         DateTime? @map("verified_at")
   xamanUserToken     String?   @map("xaman_user_token") @db.VarChar(255)
+  theme              String    @default("light") @map("theme") @db.VarChar(10)
   isActive           Boolean   @default(true) @map("is_active")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
@@ -219,7 +218,7 @@ model Transaction {
   userId       String   @map("user_id") @db.Uuid
   type         String   @db.VarChar(40)
   amountGkc    Decimal  @map("amount_gkc") @db.Decimal(20, 8)
-  balanceAfter Decimal  @map("balance_after") @db.Decimal(20, 8)
+  balanceAfter Decimal? @map("balance_after") @db.Decimal(20, 8)
   referenceId  String?  @map("reference_id") @db.Uuid
   txHash       String?  @map("tx_hash") @db.VarChar(100)
   description  String?

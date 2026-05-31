@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ROUTES } from '@/lib/constants';
-import { Zap, Mail, Lock } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
+import { CacpWordmark, GkcMark } from '@/components/Brand';
 
 export default function Login() {
-  const [email, setEmail] = useState('demo@gkc.edu.tw');
+  const [email, setEmail] = useState('demo_user_1@gkc.edu.tw');
   const [password, setPassword] = useState('Demo1234');
   const [isLoading, setIsLoading] = useState(false);
   const { login, user } = useAuth();
@@ -38,20 +39,19 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/30">
-            <Zap className="w-9 h-9 text-white" />
-          </div>
-          <div className="text-center">
-            <h1 className="font-display font-bold text-3xl">高科幣</h1>
-            <p className="text-sm text-muted-foreground mt-1">GKC AI 算力平台</p>
-          </div>
+        <div className="flex flex-col items-center gap-1">
+          <CacpWordmark className="text-4xl sm:text-5xl" />
+          <p className="cacp-subtitle text-sm">校園AI算力租賃共享平台</p>
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">登入帳戶</CardTitle>
-            <CardDescription>使用您的電子郵件和密碼登入</CardDescription>
+          <CardHeader className="relative">
+            <div className="pointer-events-none absolute top-4 right-5 flex flex-col items-end leading-none select-none">
+              <GkcMark className="text-3xl opacity-20" />
+              <span className="cacp-subtitle text-[10px] mt-1 opacity-70">用戶終端</span>
+            </div>
+            <CardTitle className="text-xl pr-20">登入帳戶</CardTitle>
+            <CardDescription className="pr-20">使用您的電子郵件和密碼登入</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">

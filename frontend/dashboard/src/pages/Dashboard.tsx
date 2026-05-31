@@ -31,8 +31,8 @@ const revenueData = [
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const gkcDisplay = user?.gkcBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? '—';
-  const xrpDisplay = user?.xrpBalance.toLocaleString(undefined, { maximumFractionDigits: 2 }) ?? '—';
+  const gkcDisplay = '—';
+  const xrpDisplay = '—';
 
   const showWalletBanner = user?.verificationStatus === 'verified' && !user?.xrpAddress;
 
@@ -40,7 +40,7 @@ export default function Dashboard() {
     <Layout>
       <div className="p-8 space-y-8">
         {/* 頁面標題 */}
-        <div>
+        <div className="hidden lg:block">
           <h1 className="text-3xl font-display font-bold">儀表板</h1>
           <p className="text-muted-foreground mt-2">
             錢包餘額來自後端帳號；圖表與節點統計待 Phase 2+ API

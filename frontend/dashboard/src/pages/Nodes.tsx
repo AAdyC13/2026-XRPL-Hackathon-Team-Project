@@ -122,8 +122,9 @@ export default function Nodes() {
 
   return (
     <Layout>
+      <div className="p-8 space-y-8">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="hidden lg:block">
             <h1 className="text-3xl font-display font-bold">算力節點</h1>
             <p className="text-muted-foreground mt-2">管理您的 GPU 節點與收益</p>
           </div>
@@ -280,7 +281,8 @@ export default function Nodes() {
           </CardContent>
         </Card>
 
-      {/* 添加節點 Dialog */}
+        {/* 添加節點 Dialog */}
+      </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>

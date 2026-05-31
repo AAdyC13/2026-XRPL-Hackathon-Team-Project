@@ -34,8 +34,6 @@ export class WalletService {
   async getWallet(userId: string) {
     const user = await this.getUser(userId);
     return {
-      gkc_balance: Number(user.gkcBalance),
-      xrp_balance: Number(user.xrpBalance),
       xrp_address: user.xrpAddress,
       verification_status: user.verificationStatus,
       payment_channel: null
@@ -54,6 +52,20 @@ export class WalletService {
     }
 
     return createWalletBindPayload();
+  }
+
+  async rebindWallet(userId: string) {
+    const user = await this.getUser(userId);
+
+    if (user.verificationStatus !== "verified") {
+      throw new ForbiddenException({ code: "NOT_VERIFIED", message: "請先完成學校信箱驗證才能綁定錢包。" });
+    }
+
+    if (user.xrpAddress) {
+      await this.unbindWallet(userId);
+    }
+
+    return this.initiateWalletBind(userId);
   }
 
   async pollWalletBind(userId: string, uuid: string) {

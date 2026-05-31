@@ -47,7 +47,7 @@ describe("Auth API", () => {
   it("rejects duplicate email on register", async () => {
     const response = await appContext.http.post("/api/v1/auth/register").send({
       username: "another_user",
-      email: "demo@gkc.edu.tw",
+      email: "demo_user_1@gkc.edu.tw",
       password: "ValidPassword1"
     });
 
@@ -57,18 +57,18 @@ describe("Auth API", () => {
 
   it("logs in demo user with valid credentials", async () => {
     const response = await appContext.http.post("/api/v1/auth/login").send({
-      email: "demo@gkc.edu.tw",
-      password: "Demo12345678"
+      email: "demo_user_1@gkc.edu.tw",
+      password: "Demo1234"
     });
 
     expect([200, 201]).toContain(response.status);
     expect(typeof response.body.token).toBe("string");
-    expect(response.body.user.email).toBe("demo@gkc.edu.tw");
+    expect(response.body.user.email).toBe("demo_user_1@gkc.edu.tw");
   });
 
   it("rejects invalid password on login", async () => {
     const response = await appContext.http.post("/api/v1/auth/login").send({
-      email: "demo@gkc.edu.tw",
+      email: "demo_user_1@gkc.edu.tw",
       password: "WrongPassword1"
     });
 
@@ -78,15 +78,15 @@ describe("Auth API", () => {
 
   it("returns profile for valid JWT on /me", async () => {
     const loginResponse = await appContext.http.post("/api/v1/auth/login").send({
-      email: "demo@gkc.edu.tw",
-      password: "Demo12345678"
+      email: "demo_user_1@gkc.edu.tw",
+      password: "Demo1234"
     });
     const token = loginResponse.body.token as string;
 
     const meResponse = await appContext.http.get("/api/v1/auth/me").set("Authorization", `Bearer ${token}`).expect(200);
     expect(meResponse.body).toMatchObject({
-      email: "demo@gkc.edu.tw",
-      username: "gkc_researcher"
+      email: "demo_user_1@gkc.edu.tw",
+      username: "demo_user_1"
     });
   });
 

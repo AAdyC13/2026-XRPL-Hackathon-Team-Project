@@ -66,6 +66,18 @@ pnpm admin:dev
 - 欄位名包含 `password` / `hash` / `secret` / `token` 預設隱藏。
 - 可在 `resourceActionDenyList` 針對特定 model 關閉 `new/delete`（保留擴充點）。
 
+## 錢包調撥頁（Treasury）
+
+側欄 **錢包調撥** 提供三階段鏈上操作（需 `.env` 種子與地址齊全）：
+
+| 步驟 | 說明 | 環境變數 |
+|------|------|----------|
+| Issuer → Warm | 發行者向金庫發 GKC | `GKC_ISSUER_*`、`WARM_WALLET_ADDRESS` |
+| Warm → Platform | 金庫補熱錢包 | `WARM_WALLET_*`、`PLATFORM_ADDRESS` |
+| Platform → 第三方 | 熱錢包對外 Payment | `PLATFORM_*`、收款方須有 TrustLine |
+
+同等 REST API（JWT `admin`）：`GET/POST /api/v1/admin/treasury/*`（見 `server/routes/treasury.ts`）。
+
 ## 自訂操作
 
 | Action | 效果 |

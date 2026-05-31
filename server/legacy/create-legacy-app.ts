@@ -4,6 +4,7 @@ import { openaiRouter } from '../routes/openai.js';
 import { providersRouter } from '../routes/providers.js';
 import { sessionsRouter } from '../routes/sessions.js';
 import { walletRouter } from '../routes/wallet.js';
+import { treasuryRouter } from '../routes/treasury.js';
 
 export function createLegacyApp() {
   const app = express.Router();
@@ -12,6 +13,7 @@ export function createLegacyApp() {
   app.use('/api/v1/api-keys', apiKeysRouter);
   app.use('/api/v1/sessions', sessionsRouter);
   app.use('/api/v1/wallet', walletRouter);
+  app.use('/api/v1/admin/treasury', treasuryRouter);
   app.use('/v1', openaiRouter);
 
   return app;

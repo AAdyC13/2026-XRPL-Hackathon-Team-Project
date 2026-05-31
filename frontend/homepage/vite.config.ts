@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, repoRoot, "");
   const port = Number(env.DEV_HOMEPAGE_PORT) || 5174;
   const dashboardOrigin = `http://localhost:${Number(env.DEV_DASHBOARD_PORT) || 5173}`;
-  const apiOrigin = `http://localhost:${env.PORT ?? "3001"}`;
+  const apiOrigin = `http://localhost:${env.PORT ?? "3000"}`;
 
   return {
     plugins: [react()],

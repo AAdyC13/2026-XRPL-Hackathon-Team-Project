@@ -15,6 +15,14 @@
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "admin/**/*.ts", "prisma/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "admin/**/*.ts",
+    "server/services/**/*.ts",
+    "server/routes/**/*.ts",
+    "server/middleware/**/*.ts",
+    "server/legacy/**/*.ts",
+    "prisma/**/*.ts"
+  ],
   "exclude": ["node_modules", "dist", "client", "client-legacy"]
 }

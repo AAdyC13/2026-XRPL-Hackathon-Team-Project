@@ -109,12 +109,6 @@ export async function settleSession(sessionId: string, userId: string): Promise<
           data: { status: 'exhausted' },
         });
       }
-    } else if (totalCost > 0) {
-      // Custodial (no Check) — deduct from platform balance
-      await prisma.user.update({
-        where: { id: userId },
-        data: { gkcBalance: { decrement: totalCost } },
-      });
     }
 
     // ── 2. Provider payout ───────────────────────────────────────────────
@@ -142,18 +136,12 @@ export async function settleSession(sessionId: string, userId: string): Promise<
     });
 
     // ── 4. Write to user transaction history ─────────────────────────────
-    const userRow = await prisma.user.findUnique({
-      where: { id: session.userId },
-      select: { gkcBalance: true },
-    });
-
     await prisma.transaction.create({
       data: {
         id: crypto.randomUUID(),
         userId: session.userId,
         type: 'inference',
         amountGkc: totalCost,
-        balanceAfter: Number(userRow?.gkcBalance ?? 0),
         referenceId: sessionId,
         txHash,
         description: `AI 推論結算 — ${session.totalRequests} 次請求 (${session.model})`,

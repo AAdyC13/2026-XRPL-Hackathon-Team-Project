@@ -184,11 +184,6 @@ openaiRouter.post('/chat/completions', authenticate, async (req: Request, res: R
         },
       });
 
-      await prisma.user.update({
-        where: { id: req.user!.id },
-        data: { gkcBalance: { decrement: costGkc } },
-      });
-
       // ── Session record (Merkle leaf) ───────────────────────────────────
       const sessionId = (req.headers['x-session-id'] as string | undefined)?.trim();
       if (sessionId) {
@@ -312,11 +307,6 @@ openaiRouter.post('/chat/completions', authenticate, async (req: Request, res: R
         providerRevenue: costGkc * 0.8,
         platformRevenue: costGkc * 0.2,
       },
-    });
-
-    await prisma.user.update({
-      where: { id: req.user!.id },
-      data: { gkcBalance: { decrement: costGkc } },
     });
 
     // ── Session record (Merkle leaf) ─────────────────────────────────────

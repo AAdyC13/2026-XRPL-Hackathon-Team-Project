@@ -23,7 +23,14 @@ Script: `server/scripts/seed-db.ts` (idempotent — skips existing demo user / p
 pnpm seed:db
 ```
 
-Demo credentials: `demo@gkc.edu.tw` / `Demo1234`.
+Demo credentials（執行 seed 後）：
+
+| 帳號 | Email | 密碼 | 角色 |
+|------|-------|------|------|
+| demo_user_1 | `demo_user_1@gkc.edu.tw` | `Demo1234` | `node_owner`（mock providers） |
+| demo_user_2 | `demo_user_2@gkc.edu.tw` | `Demo1234` | `user` |
+
+舊版 `demo@gkc.edu.tw` 會在 seed 時刪除。鏈上地址來自 `.env` 的 `USER1_WALLET_ADDRESS` / `USER2_WALLET_ADDRESS`。
 
 ### VPS checklist
 

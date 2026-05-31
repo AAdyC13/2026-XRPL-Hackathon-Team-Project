@@ -152,20 +152,12 @@ export async function topupUserGkc(
 
   const txHash = await sendGkc(toAddress, amount, `GKC_TOPUP:${userId}`);
 
-  // Mirror the on-chain balance to DB via Prisma
-  const updated = await prisma.user.update({
-    where: { id: userId },
-    data: { gkcBalance: { increment: amount } },
-    select: { gkcBalance: true },
-  });
-
   await prisma.transaction.create({
     data: {
       id: crypto.randomUUID(),
       userId,
       type: 'topup',
       amountGkc: amount,
-      balanceAfter: Number(updated.gkcBalance),
       txHash,
       description: 'GKC top-up via XRPL',
     },
@@ -218,6 +210,13 @@ export async function getGkcBalance(address: string): Promise<number> {
   const balances = await client.getBalances(address);
   const gkc = balances.find(b => b.currency === GKC_CURRENCY && b.issuer === issuer);
   return gkc ? parseFloat(gkc.value) : 0;
+}
+
+export async function getXrpBalance(address: string): Promise<number> {
+  const client = await getXrplClient();
+  const balances = await client.getBalances(address);
+  const xrp = balances.find(b => b.currency === 'XRP');
+  return xrp ? parseFloat(xrp.value) : 0;
 }
 
 // ── Cash an XRPL Check (platform collects from user's authorization) ───────

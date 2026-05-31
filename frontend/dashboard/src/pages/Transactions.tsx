@@ -62,7 +62,7 @@ export default function Transactions() {
       <div className="p-8 space-y-8">
         {/* 頁面標題 */}
         <div className="flex items-center justify-between">
-          <div>
+          <div className="hidden lg:block">
             <h1 className="text-3xl font-display font-bold">交易記錄</h1>
             <p className="text-muted-foreground mt-2">查看所有 GKC 與 XRP 交易</p>
           </div>

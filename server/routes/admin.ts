@@ -51,7 +51,6 @@ adminRouter.get('/users', async (req, res) => {
         role: true,
         verificationStatus: true,
         xrpAddress: true,
-        gkcBalance: true,
         isActive: true,
         createdAt: true,
         verifiedAt: true,
@@ -61,7 +60,7 @@ adminRouter.get('/users', async (req, res) => {
   ]);
 
   res.json({
-    users: users.map(u => ({ ...u, gkcBalance: Number(u.gkcBalance) })),
+    users,
     total,
     page,
     limit,

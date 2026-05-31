@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { authApi } from '../lib/api';
 import {
   ACCOUNT_POLICY_MESSAGES_ZH,
@@ -13,9 +13,8 @@ export interface AuthUser {
   email: string;
   role: 'user' | 'node_owner' | 'provider' | 'admin';
   xrpAddress: string | null;
-  gkcBalance: number;
-  xrpBalance: number;
   verificationStatus?: 'pending' | 'verified' | 'rejected';
+  theme: 'light' | 'dark';
 }
 
 interface AuthContextValue {
@@ -26,14 +25,14 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  updateBalance: (gkc: number, xrp: number) => void;
   refreshUser: () => Promise<void>;
+  setTheme: (theme: 'light' | 'dark') => void;
 }
 
 const MOCK_USER: AuthUser = {
   id: 'usr-001',
-  username: 'gkc_researcher',
-  email: 'demo@gkc.edu.tw',
+  username: 'demo_user_1',
+  email: 'demo_user_1@gkc.edu.tw',
   role: 'node_owner',
   xrpAddress: 'rN7n7otQDd6FczFgLdlqtyMVrn3Rqq5Q1',
   gkcBalance: 2847.52,
@@ -60,8 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: u.email,
             role: u.role as AuthUser['role'],
             xrpAddress: u.xrpAddress ?? null,
-            gkcBalance: u.gkcBalance ?? 0,
-            xrpBalance: u.xrpBalance ?? 0,
+            verificationStatus: u.verificationStatus,
+            theme: u.theme ?? 'light',
           });
         })
         .catch(() => {
@@ -76,18 +75,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     if (!email || !password) throw new Error('請填寫所有欄位');
     const res = await authApi.login(email, password);
-    const authUser: AuthUser = {
-      id: res.user.id,
-      username: res.user.username,
-      email: res.user.email,
-      role: res.user.role as AuthUser['role'],
-      xrpAddress: res.user.xrpAddress ?? null,
-      gkcBalance: res.user.gkcBalance ?? 0,
-      xrpBalance: res.user.xrpBalance ?? 0,
-    };
     setToken(res.token);
-    setUser(authUser);
     localStorage.setItem('gkc_token', res.token);
+    try {
+      const u = await authApi.me(res.token);
+      setUser({
+        id: u.id,
+        username: u.username,
+        email: u.email,
+        role: u.role as AuthUser['role'],
+        xrpAddress: u.xrpAddress ?? null,
+        verificationStatus: u.verificationStatus,
+        theme: u.theme ?? 'light',
+      });
+    } catch {
+      setUser({
+        id: res.user.id,
+        username: res.user.username,
+        email: res.user.email,
+        role: res.user.role as AuthUser['role'],
+        xrpAddress: res.user.xrpAddress ?? null,
+        verificationStatus: res.user.verificationStatus,
+        theme: res.user.theme ?? 'light',
+      });
+    }
   };
 
   const register = async (username: string, email: string, password: string) => {
@@ -109,8 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: res.user.email,
       role: res.user.role as AuthUser['role'],
       xrpAddress: res.user.xrpAddress ?? null,
-      gkcBalance: 0,
-      xrpBalance: 0,
+      theme: 'light',
     };
     setToken(res.token);
     setUser(authUser);
@@ -123,11 +133,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('gkc_token');
   };
 
-  const updateBalance = (gkc: number, xrp: number) => {
-    if (!user) return;
-    setUser({ ...user, gkcBalance: gkc, xrpBalance: xrp });
-  };
-
   const refreshUser = async () => {
     const t = token ?? localStorage.getItem('gkc_token');
     if (!t) return;
@@ -138,14 +143,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: u.email,
       role: u.role as AuthUser['role'],
       xrpAddress: u.xrpAddress ?? null,
-      gkcBalance: u.gkcBalance ?? 0,
-      xrpBalance: u.xrpBalance ?? 0,
+      verificationStatus: u.verificationStatus,
+      theme: u.theme ?? 'light',
     });
   };
 
+  const setTheme = useCallback((theme: 'light' | 'dark') => {
+    if (!user) return;
+    setUser({ ...user, theme });
+    const t = token ?? localStorage.getItem('gkc_token');
+    if (t) authApi.updatePreferences(t, theme).catch(() => {});
+  }, [user, token]);
+
   return (
     <AuthContext.Provider
-      value={{ user, token, isAuthenticated: !!token, isLoading, login, register, logout, updateBalance, refreshUser }}
+      value={{ user, token, isAuthenticated: !!token, isLoading, login, register, logout, refreshUser, setTheme }}
     >
       {children}
     </AuthContext.Provider>

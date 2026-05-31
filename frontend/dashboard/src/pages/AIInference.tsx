@@ -501,10 +501,10 @@ export default function AIInference() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="p-8 space-y-8">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div>
+          <div className="hidden lg:block">
             <h1 className="text-3xl font-display font-bold">AI 推論市集</h1>
             <p className="text-muted-foreground mt-1">選擇提供者，按 token 計費，GKC Payment Channel 鏈下即時結算</p>
           </div>
@@ -563,7 +563,12 @@ export default function AIInference() {
                         </div>
                       </div>
                       {!selectedProvider ? (
-                        <Button onClick={handleQuickStart} className="w-full">
+                        <Button
+                          onClick={handleQuickStart}
+                          className="w-full"
+                          disabled={!token || !activeCheck}
+                          title={!token ? '請先登入以使用推論' : !activeCheck ? '請先建立或完成 XRPL Check' : undefined}
+                        >
                           <Zap className="w-4 h-4 mr-2" />
                           開始對話
                         </Button>
@@ -812,7 +817,7 @@ export default function AIInference() {
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold text-primary">
-                  {user?.gkcBalance.toLocaleString() ?? '---'}{' '}
+                  {user?.gkcBalance?.toLocaleString() ?? '---'}{' '}
                   <span className="text-sm font-normal text-muted-foreground">GKC</span>
                 </p>
                 <Button variant="outline" size="sm" className="w-full mt-3">

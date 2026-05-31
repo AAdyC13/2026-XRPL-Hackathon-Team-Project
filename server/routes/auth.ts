@@ -80,17 +80,12 @@ authRouter.post('/register', async (req, res) => {
       .then(hasTrust => {
         if (!hasTrust) return;
         return sendGkc(xrpAddress, 100, 'GKC_WELCOME').then(async txHash => {
-          await prisma.user.update({
-            where: { id },
-            data: { gkcBalance: { increment: 100 } },
-          });
           await prisma.transaction.create({
             data: {
               id: crypto.randomUUID(),
               userId: id,
               type: 'topup',
               amountGkc: 100,
-              balanceAfter: 100,
               txHash,
               description: '新用戶歡迎獎勵 GKC × 100',
             },
@@ -142,9 +137,9 @@ authRouter.post('/login', async (req, res) => {
       username: user.username,
       email: user.email,
       role: user.role,
-      gkcBalance: Number(user.gkcBalance),
-      xrpBalance: Number(user.xrpBalance),
+      verificationStatus: user.verificationStatus,
       xrpAddress: user.xrpAddress,
+      theme: user.theme,
     },
   });
 });
@@ -166,8 +161,90 @@ authRouter.get('/me', authenticate, async (req, res) => {
     username: user.username,
     email: user.email,
     role: user.role,
-    gkcBalance: Number(user.gkcBalance),
-    xrpBalance: Number(user.xrpBalance),
+    verificationStatus: user.verificationStatus,
     xrpAddress: user.xrpAddress,
+    theme: user.theme,
   });
+});
+
+// ── PATCH /profile ─────────────────────────────────────────────────────────
+
+const ProfileSchema = z.object({
+  username: z.string().min(3).max(64).regex(/^[a-zA-Z0-9_]+$/, {
+    message: 'Username must be 3-64 chars with letters, numbers, underscores.',
+  }),
+});
+
+authRouter.patch('/profile', authenticate, async (req, res) => {
+  const parsed = ProfileSchema.safeParse(req.body);
+  if (!parsed.success) {
+    const msg = parsed.error.errors[0]?.message ?? 'Validation failed';
+    res.status(400).json({ error: msg });
+    return;
+  }
+  const { username } = parsed.data;
+  const conflict = await prisma.user.findFirst({
+    where: { username, NOT: { id: req.user!.id } },
+  });
+  if (conflict) {
+    res.status(409).json({ error: 'Username already taken' });
+    return;
+  }
+  const updated = await prisma.user.update({
+    where: { id: req.user!.id },
+    data: { username },
+    select: { id: true, username: true, email: true, role: true },
+  });
+  res.json({ ok: true, user: updated });
+});
+
+// ── PATCH /password ─────────────────────────────────────────────────────────
+
+const PasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/, {
+    message: 'Password must include uppercase, lowercase, and number with minimum 8 chars.',
+  }),
+});
+
+authRouter.patch('/password', authenticate, async (req, res) => {
+  const parsed = PasswordSchema.safeParse(req.body);
+  if (!parsed.success) {
+    const msg = parsed.error.errors[0]?.message ?? 'Validation failed';
+    res.status(400).json({ error: msg });
+    return;
+  }
+  const { currentPassword, newPassword } = parsed.data;
+  const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+  if (!user) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) {
+    res.status(401).json({ error: 'Current password is incorrect' });
+    return;
+  }
+  const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+  await prisma.user.update({ where: { id: req.user!.id }, data: { passwordHash } });
+  res.json({ ok: true });
+});
+
+// ── PATCH /preferences ─────────────────────────────────────────────────────
+
+const PreferencesSchema = z.object({
+  theme: z.enum(['light', 'dark']),
+});
+
+authRouter.patch('/preferences', authenticate, async (req, res) => {
+  const parsed = PreferencesSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Validation failed' });
+    return;
+  }
+  await prisma.user.update({
+    where: { id: req.user!.id },
+    data: { theme: parsed.data.theme },
+  });
+  res.json({ ok: true, theme: parsed.data.theme });
 });

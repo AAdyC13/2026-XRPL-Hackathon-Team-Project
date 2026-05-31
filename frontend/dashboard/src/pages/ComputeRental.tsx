@@ -100,7 +100,7 @@ export default function ComputeRental() {
   return (
     <Layout>
       <div className="p-8 space-y-8">
-        <div>
+        <div className="hidden lg:block">
           <h1 className="text-3xl font-display font-bold">算力出租市場</h1>
           <p className="text-muted-foreground mt-2">
             租用 GPU 節點進行模型訓練或微調，費用透過 XRPL Escrow 保障雙方權益

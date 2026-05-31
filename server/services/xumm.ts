@@ -12,6 +12,11 @@ const XUMM_BASE = 'https://xumm.app/api/v1/platform';
 function xummHeaders() {
   const apiKey = process.env.XUMM_API_KEY;
   const apiSecret = process.env.XUMM_API_SECRET;
+  console.log("[xumm] credentials", {
+    hasKey: Boolean(apiKey),
+    hasSecret: Boolean(apiSecret),
+    keyTail: apiKey ? apiKey.slice(-4) : null,
+  });
   if (!apiKey || !apiSecret) {
     throw new Error('XUMM credentials not configured. Set XUMM_API_KEY and XUMM_API_SECRET in .env');
   }
@@ -23,6 +28,7 @@ function xummHeaders() {
 }
 
 async function xummFetch<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
+  console.log("[xumm] request", { method, path });
   const res = await fetch(`${XUMM_BASE}${path}`, {
     method,
     headers: xummHeaders(),
@@ -30,8 +36,10 @@ async function xummFetch<T>(method: 'GET' | 'POST', path: string, body?: unknown
   });
   if (!res.ok) {
     const text = await res.text().catch(() => `HTTP ${res.status}`);
+    console.error("[xumm] error", { status: res.status, path, body: text });
     throw new Error(`XUMM API ${res.status}: ${text}`);
   }
+  console.log("[xumm] response ok", { status: res.status, path });
   return res.json() as Promise<T>;
 }
 
@@ -90,6 +98,7 @@ export interface XummStatus {
  * Account is intentionally omitted — Xaman fills it in from whoever scans.
  */
 export async function createTrustLinePayload(): Promise<XummPayload> {
+  console.log("[xumm] createTrustLinePayload:start");
   const issuer = process.env.GKC_ISSUER_ADDRESS;
   if (!issuer) throw new Error('GKC_ISSUER_ADDRESS not set');
 
@@ -128,6 +137,7 @@ export async function createTrustLinePayload(): Promise<XummPayload> {
  * Poll status of a previously created XUMM payload.
  */
 export async function getPayloadStatus(uuid: string): Promise<XummStatus> {
+  console.log("[xumm] getPayloadStatus", { uuid });
   const data = await xummFetch<XummStatusResponse>('GET', `/payload/${uuid}`);
   return {
     signed: data.meta?.signed ?? false,
@@ -193,6 +203,7 @@ export async function createDepositPayload(
  * and the signed response reveals their XRP address.
  */
 export async function createWalletBindPayload(): Promise<XummPayload> {
+  console.log("[xumm] createWalletBindPayload:start");
   const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
 
   const data = await xummFetch<XummPayloadResponse>('POST', '/payload', {

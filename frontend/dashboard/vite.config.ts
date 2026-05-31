@@ -9,7 +9,7 @@ const repoRoot = path.resolve(__dirname, "../..");
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, repoRoot, "");
-  const apiOrigin = `http://localhost:${env.PORT ?? "3001"}`;
+  const apiOrigin = `http://localhost:${env.PORT ?? "3000"}`;
   const port = Number(env.DEV_DASHBOARD_PORT) || 5173;
 
   return {

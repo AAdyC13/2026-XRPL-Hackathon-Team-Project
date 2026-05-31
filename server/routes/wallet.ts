@@ -8,6 +8,7 @@
  * POST   /api/v1/wallet/bind/initiate        — initiate Xaman wallet binding (QR / deeplink)
  * GET    /api/v1/wallet/bind/poll/:uuid      — poll Xaman payload, link XRP address on sign
  * DELETE /api/v1/wallet/bind                 — unbind wallet (requires zero on-chain balance)
+ * POST   /api/v1/wallet/rebind               — unbind current wallet (if any) and start a fresh Xaman bind
  * POST   /api/v1/wallet/trustline/approve    — server-side issuer trustline authorization
  */
 
@@ -19,6 +20,7 @@ import {
   buildTrustSetTx,
   topupUserGkc,
   getGkcBalance,
+  getXrpBalance,
   ensureTrustLine,
   sendGkc,
   createCheckFromIssuer,
@@ -111,13 +113,15 @@ walletRouter.post('/topup', requireRole('admin'), async (req, res) => {
 });
 
 // ── GET /balance ───────────────────────────────────────────────────────────
-// Returns both on-chain XRPL balance and off-chain DB balance.
-// They should match after each settled batch; discrepancy = pending spending.
+// All balances are queried live from XRPL — no cached DB values.
+// Error reasons:
+//   no_wallet    — user has not bound an XRPL address
+//   xrpl_error   — XRPL node unreachable or account not activated
 
 walletRouter.get('/balance', async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user!.id },
-    select: { xrpAddress: true, gkcBalance: true },
+    select: { xrpAddress: true },
   });
 
   if (!user) {
@@ -125,28 +129,49 @@ walletRouter.get('/balance', async (req, res) => {
     return;
   }
 
-  const dbBalance = Number(user.gkcBalance);
-
-  let onChainGkc: number | null = null;
-  let hasTrustLine = false;
-  if (user.xrpAddress) {
-    try {
-      [onChainGkc, hasTrustLine] = await Promise.all([
-        getGkcBalance(user.xrpAddress),
-        ensureTrustLine(user.xrpAddress),
-      ]);
-    } catch {
-      // XRPL unreachable — still return DB balance
-    }
+  if (!user.xrpAddress) {
+    res.json({
+      gkcBalance: null,
+      xrpBalance: null,
+      hasTrustLine: false,
+      xrpAddress: null,
+      gkcIssuerAddress: process.env.GKC_ISSUER_ADDRESS ?? null,
+      errorCode: 'no_wallet',
+      errorMessage: '尚未綁定 XRPL 錢包，無法查詢鏈上餘額',
+    });
+    return;
   }
 
-  res.json({
-    dbBalance,
-    onChainBalance: onChainGkc,
-    pendingSettlement: onChainGkc !== null ? onChainGkc - dbBalance : null,
-    xrpAddress: user.xrpAddress,
-    hasTrustLine,
-  });
+  try {
+    const [gkcBalance, xrpBalance, hasTrustLine] = await Promise.all([
+      getGkcBalance(user.xrpAddress),
+      getXrpBalance(user.xrpAddress),
+      ensureTrustLine(user.xrpAddress),
+    ]);
+    res.json({
+      gkcBalance,
+      xrpBalance,
+      hasTrustLine,
+      xrpAddress: user.xrpAddress,
+      gkcIssuerAddress: process.env.GKC_ISSUER_ADDRESS ?? null,
+      errorCode: null,
+      errorMessage: null,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const isAccountNotFound = msg.includes('actNotFound') || msg.includes('Account not found');
+    res.json({
+      gkcBalance: null,
+      xrpBalance: null,
+      hasTrustLine: false,
+      xrpAddress: user.xrpAddress,
+      gkcIssuerAddress: process.env.GKC_ISSUER_ADDRESS ?? null,
+      errorCode: 'xrpl_error',
+      errorMessage: isAccountNotFound
+        ? '該 XRPL 帳戶尚未激活（需至少存入 10 XRP）'
+        : 'XRPL 節點暫時無法連線，請稍後再試',
+    });
+  }
 });
 
 // ── POST /link-address ────────────────────────────────────────────────────
@@ -162,6 +187,15 @@ walletRouter.post('/link-address', async (req, res) => {
     res.status(400).json({ error: 'Invalid XRP address' });
     return;
   }
+
+  const issuer = process.env.GKC_ISSUER_ADDRESS;
+  if (issuer && parsed.data.xrpAddress === issuer) {
+    res.status(400).json({
+      error: '不能使用 GKC 發行者（Issuer）地址作為個人錢包，請綁定您的 Xaman 錢包地址。',
+    });
+    return;
+  }
+
   await prisma.user.update({
     where: { id: req.user!.id },
     data: { xrpAddress: parsed.data.xrpAddress },
@@ -255,12 +289,56 @@ walletRouter.delete('/bind', async (req, res) => {
 
     await prisma.user.update({
       where: { id: req.user!.id },
-      data: { xrpAddress: null },
+      data: { xrpAddress: null, xamanUserToken: null },
     });
 
     res.json({ ok: true, message: 'Wallet unbound and trustline frozen' });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// ── POST /rebind ──────────────────────────────────────────────────────────
+// Unbinds the current wallet when present, then creates a fresh SignIn payload.
+
+walletRouter.post('/rebind', async (req, res) => {
+  if (!isXummConfigured()) {
+    res.status(503).json({ error: 'Xaman 未設定，請聯繫管理員（需設定 XUMM_API_KEY / XUMM_API_SECRET）' });
+    return;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.id },
+    select: { xrpAddress: true },
+  });
+
+  if (user?.xrpAddress) {
+    try {
+      const onChainBalance = await getGkcBalance(user.xrpAddress);
+      if (onChainBalance !== 0) {
+        res.status(400).json({
+          error: `Cannot rebind: on-chain GKC balance is ${onChainBalance}. Must be 0 before rebinding.`,
+        });
+        return;
+      }
+
+      await freezeTrustLine(user.xrpAddress);
+
+      await prisma.user.update({
+        where: { id: req.user!.id },
+        data: { xrpAddress: null, xamanUserToken: null },
+      });
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+      return;
+    }
+  }
+
+  try {
+    const payload = await createWalletBindPayload();
+    res.json(payload);
+  } catch (err) {
+    res.status(503).json({ error: 'XUMM 服務暫時不可用', details: (err as Error).message });
   }
 });
 
@@ -335,7 +413,7 @@ walletRouter.get('/xumm/status/:uuid', async (req, res) => {
 
       const user = await prisma.user.findFirst({
         where: { xrpAddress: status.account },
-        select: { id: true, gkcBalance: true },
+        select: { id: true },
       });
 
       if (user) {
@@ -349,18 +427,12 @@ walletRouter.get('/xumm/status/:uuid', async (req, res) => {
         if (!alreadySent) {
           sendGkc(status.account, 100, 'GKC_WELCOME')
             .then(async txHash => {
-              const updated = await prisma.user.update({
-                where: { id: user.id },
-                data: { gkcBalance: { increment: 100 } },
-                select: { gkcBalance: true },
-              });
               await prisma.transaction.create({
                 data: {
                   id: crypto.randomUUID(),
                   userId: user.id,
                   type: 'topup',
                   amountGkc: 100,
-                  balanceAfter: Number(updated.gkcBalance),
                   txHash,
                   description: '新用戶歡迎獎勵 GKC × 100',
                 },
@@ -496,20 +568,13 @@ walletRouter.get('/deposit/status/:uuid', async (req, res) => {
     const xummStatus = await getPayloadStatus(req.params.uuid);
 
     if (xummStatus.signed && xummStatus.txid) {
-      // Credit GKC and record transaction
-      const updated = await prisma.user.update({
-        where: { id: deposit.userId },
-        data: { gkcBalance: { increment: Number(deposit.gkcAmount) } },
-        select: { gkcBalance: true },
-      });
-
+      // Record transaction — balance is always read from chain
       await prisma.transaction.create({
         data: {
           id: crypto.randomUUID(),
           userId: deposit.userId,
           type: 'topup',
           amountGkc: Number(deposit.gkcAmount),
-          balanceAfter: Number(updated.gkcBalance),
           txHash: xummStatus.txid,
           description: `充值 ${Number(deposit.gkcAmount)} GKC（${Number(deposit.xrpAmount)} XRP，匯率 1:${process.env.GKC_PER_XRP ?? '10'}）`,
         },

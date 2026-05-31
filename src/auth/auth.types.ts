@@ -4,8 +4,6 @@ export type AuthUserProfile = {
   email: string;
   role: string;
   xrpAddress: string | null;
-  gkcBalance: number;
-  xrpBalance: number;
   verificationStatus: string;
 };
 

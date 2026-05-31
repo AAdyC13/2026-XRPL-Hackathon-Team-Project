@@ -50,11 +50,13 @@ cp .env.example .env
 pnpm db:migrate
 pnpm seed:db
 
-# 開發伺服器
-# API: http://localhost:3000
+# 前端伺服器
 # 官網: http://localhost:5174
 # Dashboard: http://localhost:5173/app
-pnpm dev
+pnpm frontend
+
+# 後端伺服器
+pnpm backend
 
 # 舊 XRPL demo（選用）
 pnpm dev:legacy
@@ -67,8 +69,8 @@ pnpm test
 ### 測試帳號
 | 欄位 | 值 |
 |------|-----|
-| Email | `demo@gkc.edu.tw` |
-| 密碼 | `Demo1234` |
+| 帳號 | `demo_user_1@gkc.edu.tw` / `demo_user_2@gkc.edu.tw` |
+| 密碼 | `Demo1234`（兩者相同） |
 
 > 由 `pnpm seed:db` 寫入。生產環境容器啟動時自動 `migrate`；seed 需手動執行，詳見 [docs/DATABASE.md](./docs/DATABASE.md)。
 

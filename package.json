@@ -4,7 +4,8 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently -n api,www,app \"nest start --watch\" \"vite --host -c frontend/homepage/vite.config.ts\" \"vite --host -c frontend/dashboard/vite.config.ts\"",
+    "frontend": "concurrently -n www,app \"vite --host -c frontend/homepage/vite.config.ts\" \"vite --host -c frontend/dashboard/vite.config.ts\"",
+    "backend": "pnpm server:dev",
     "dev:homepage": "vite --host -c frontend/homepage/vite.config.ts",
     "dev:dashboard": "vite --host -c frontend/dashboard/vite.config.ts",
     "build:homepage": "vite build -c frontend/homepage/vite.config.ts",

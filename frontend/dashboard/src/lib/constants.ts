@@ -154,6 +154,7 @@ export const ROUTES = {
   NODES: '/nodes',
   COMPUTE_RENTAL: '/compute-rental',
   TRANSACTIONS: '/transactions',
+  ACCOUNT_SETTINGS: '/account-settings',
   DEMO: '/demo',
 };
 
