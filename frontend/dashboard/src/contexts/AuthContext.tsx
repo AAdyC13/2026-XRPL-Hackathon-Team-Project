@@ -15,6 +15,8 @@ export interface AuthUser {
   xrpAddress: string | null;
   verificationStatus?: 'pending' | 'verified' | 'rejected';
   theme: 'light' | 'dark';
+  gkcBalance?: number;
+  xrpBalance?: number;
 }
 
 interface AuthContextValue {
@@ -35,6 +37,7 @@ const MOCK_USER: AuthUser = {
   email: 'demo_user_1@gkc.edu.tw',
   role: 'node_owner',
   xrpAddress: 'rN7n7otQDd6FczFgLdlqtyMVrn3Rqq5Q1',
+  theme: 'light',
   gkcBalance: 2847.52,
   xrpBalance: 128.50,
 };
