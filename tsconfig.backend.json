@@ -13,11 +13,13 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node"],
+    "jsx": "react"
   },
   "include": [
     "src/**/*.ts",
     "admin/**/*.ts",
+    "admin/**/*.tsx",
     "server/services/**/*.ts",
     "server/routes/**/*.ts",
     "server/middleware/**/*.ts",
