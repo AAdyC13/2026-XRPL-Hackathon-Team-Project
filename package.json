@@ -33,6 +33,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@adminjs/design-system": "^4.1.1",
     "@adminjs/express": "^6.1.1",
     "@adminjs/prisma": "^5.0.4",
     "@nestjs/common": "^11.1.24",
@@ -62,6 +63,7 @@
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "reflect-metadata": "^0.2.2",
+    "styled-components": "^6.4.2",
     "ws": "^8.18.0",
     "xrpl": "^4.6.0",
     "xumm-sdk": "^1.11.2",
