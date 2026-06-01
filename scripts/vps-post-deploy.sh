@@ -13,6 +13,7 @@ VERIFY_WARMUP_SECONDS="${VERIFY_WARMUP_SECONDS:-50}"
 VERIFY_RESTART_LIMIT="${VERIFY_RESTART_LIMIT:-2}"
 VERIFY_FAIL_LIMIT="${VERIFY_FAIL_LIMIT:-4}"
 VERIFY_REQUIRED_SUCCESSES="${VERIFY_REQUIRED_SUCCESSES:-3}"
+IMAGE_REPO="${IMAGE_REPO:-ghcr.io/aadyc13/2026-xrpl-hackathon-team-project}"
 
 cd "$DEPLOY_DIR"
 
@@ -188,8 +189,36 @@ promote_previous() {
 }
 
 compose_up() {
+  # Free disk before pulling the new image: dangling images + builder cache only.
+  # The VPS only pulls images (never builds), so pruning builder cache is safe.
+  docker image prune -f >/dev/null 2>&1 || true
+  docker builder prune -f >/dev/null 2>&1 || true
   compose_cmd pull
   compose_cmd up -d --remove-orphans
+}
+
+prune_images() {
+  local keep_current keep_previous
+
+  keep_current="$(read_image_tag "$COMPOSE_ENV" || true)"
+  keep_previous="$(read_image_tag "$PREVIOUS_ENV" || true)"
+
+  log "pruning old ${IMAGE_REPO} images; keep current=${keep_current:-none} previous=${keep_previous:-none}"
+
+  # Enumerate "<repo>:<tag>" for our image only, removing every tag except the
+  # currently-running one, the rollback target, and the floating :latest tag.
+  docker images --format '{{.Repository}}:{{.Tag}}' "${IMAGE_REPO}" \
+    | while IFS= read -r ref; do
+        tag="${ref##*:}"
+        case "$tag" in
+          "$keep_current"|"$keep_previous"|latest|"<none>") continue ;;
+        esac
+        log "removing image ${ref}"
+        docker rmi "$ref" >/dev/null 2>&1 || log "could not remove ${ref} (in use?)"
+      done
+
+  # Clean up any layers left dangling by the removals above.
+  docker image prune -f >/dev/null 2>&1 || true
 }
 
 rollback() {
@@ -238,6 +267,9 @@ case "$ACTION" in
     ;;
   promote-previous)
     promote_previous
+    ;;
+  prune-images)
+    prune_images
     ;;
   *)
     log "unknown action: $ACTION"

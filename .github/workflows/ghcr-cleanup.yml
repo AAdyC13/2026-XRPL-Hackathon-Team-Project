@@ -1,0 +1,23 @@
+name: GHCR cleanup
+
+on:
+  schedule:
+    - cron: "0 4 * * 0"   # weekly, Sunday 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    name: Delete old GHCR image versions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old container versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: "2026-xrpl-hackathon-team-project"
+          package-type: "container"
+          min-versions-to-keep: 10
+          ignore-versions: "^latest$"
+          delete-only-untagged-versions: "false"

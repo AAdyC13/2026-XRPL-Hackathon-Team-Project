@@ -14,12 +14,6 @@ importers:
       '@adminjs/prisma':
         specifier: ^5.0.4
         version: 5.0.4(@prisma/client@6.19.2(prisma@6.19.2(typescript@5.6.3))(typescript@5.6.3))(adminjs@7.8.17(@types/babel__core@7.20.5)(@types/react-dom@19.2.1(@types/react@19.2.1))(@types/react@19.2.1))
-      '@babel/plugin-syntax-import-assertions':
-        specifier: ^7.29.7
-        version: 7.29.7(@babel/core@7.28.4)
-      '@hookform/resolvers':
-        specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.64.0(react@19.2.1))
       '@nestjs/common':
         specifier: ^11.1.24
         version: 11.1.24(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -50,6 +44,88 @@ importers:
       '@prisma/client':
         specifier: ^6.19.2
         version: 6.19.2(prisma@6.19.2(typescript@5.6.3))(typescript@5.6.3)
+      adminjs:
+        specifier: ^7.8.17
+        version: 7.8.17(@types/babel__core@7.20.5)(@types/react-dom@19.2.1(@types/react@19.2.1))(@types/react@19.2.1)
+      bcrypt:
+        specifier: ^6.0.0
+        version: 6.0.0
+      class-transformer:
+        specifier: ^0.5.1
+        version: 0.5.1
+      class-validator:
+        specifier: ^0.15.1
+        version: 0.15.1
+      cors:
+        specifier: ^2.8.5
+        version: 2.8.6
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
+      express-session:
+        specifier: ^1.19.0
+        version: 1.19.0
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
+      nodemailer:
+        specifier: ^8.0.9
+        version: 8.0.9
+      passport:
+        specifier: ^0.7.0
+        version: 0.7.0
+      passport-jwt:
+        specifier: ^4.0.1
+        version: 4.0.1
+      pg:
+        specifier: ^8.16.0
+        version: 8.21.0
+      prisma:
+        specifier: ^6.19.2
+        version: 6.19.2(typescript@5.6.3)
+      react:
+        specifier: ^19.2.1
+        version: 19.2.1
+      react-dom:
+        specifier: ^19.2.1
+        version: 19.2.1(react@19.2.1)
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      ws:
+        specifier: ^8.18.0
+        version: 8.21.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      xrpl:
+        specifier: ^4.6.0
+        version: 4.6.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      xumm-sdk:
+        specifier: ^1.11.2
+        version: 1.11.2
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@babel/plugin-syntax-import-assertions':
+        specifier: ^7.29.7
+        version: 7.29.7(@babel/core@7.28.4)
+      '@builder.io/vite-plugin-jsx-loc':
+        specifier: ^0.1.1
+        version: 0.1.1(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.48.0)(tsx@4.20.6))
+      '@hookform/resolvers':
+        specifier: ^5.2.2
+        version: 5.2.2(react-hook-form@7.64.0(react@19.2.1))
+      '@nestjs/cli':
+        specifier: ^11.0.21
+        version: 11.0.21(@types/node@24.7.0)(lightningcss@1.30.1)(postcss@8.5.6)(prettier@3.6.2)
+      '@nestjs/schematics':
+        specifier: ^11.1.0
+        version: 11.1.0(chokidar@4.0.3)(prettier@3.6.2)(typescript@5.6.3)
+      '@nestjs/testing':
+        specifier: ^11.1.24
+        version: 11.1.24(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.24)(@nestjs/platform-express@11.1.24)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.1(@types/react@19.2.1))(@types/react@19.2.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -128,6 +204,12 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.1(@types/react@19.2.1))(@types/react@19.2.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@tailwindcss/typography':
+        specifier: ^0.5.15
+        version: 0.5.19(tailwindcss@4.1.14)
+      '@tailwindcss/vite':
+        specifier: ^4.1.3
+        version: 4.1.14(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.48.0)(tsx@4.20.6))
       '@tiptap/extension-blockquote':
         specifier: 2.1.13
         version: 2.1.13(@tiptap/core@2.1.13(@tiptap/pm@2.1.13))
@@ -170,145 +252,6 @@ importers:
       '@tiptap/extension-strike':
         specifier: 2.1.13
         version: 2.1.13(@tiptap/core@2.1.13(@tiptap/pm@2.1.13))
-      adminjs:
-        specifier: ^7.8.17
-        version: 7.8.17(@types/babel__core@7.20.5)(@types/react-dom@19.2.1(@types/react@19.2.1))(@types/react@19.2.1)
-      axios:
-        specifier: ^1.12.0
-        version: 1.12.2
-      bcrypt:
-        specifier: ^6.0.0
-        version: 6.0.0
-      class-transformer:
-        specifier: ^0.5.1
-        version: 0.5.1
-      class-validator:
-        specifier: ^0.15.1
-        version: 0.15.1
-      class-variance-authority:
-        specifier: ^0.7.1
-        version: 0.7.1
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      cmdk:
-        specifier: ^1.1.1
-        version: 1.1.1(@types/react-dom@19.2.1(@types/react@19.2.1))(@types/react@19.2.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      cors:
-        specifier: ^2.8.5
-        version: 2.8.6
-      dotenv:
-        specifier: ^16.4.7
-        version: 16.6.1
-      embla-carousel-react:
-        specifier: ^8.6.0
-        version: 8.6.0(react@19.2.1)
-      express:
-        specifier: ^4.21.2
-        version: 4.21.2
-      express-session:
-        specifier: ^1.19.0
-        version: 1.19.0
-      framer-motion:
-        specifier: ^12.23.22
-        version: 12.23.22(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      input-otp:
-        specifier: ^1.4.2
-        version: 1.4.2(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      jsonwebtoken:
-        specifier: ^9.0.3
-        version: 9.0.3
-      lucide-react:
-        specifier: ^0.453.0
-        version: 0.453.0(react@19.2.1)
-      nanoid:
-        specifier: ^5.1.5
-        version: 5.1.6
-      next-themes:
-        specifier: ^0.4.6
-        version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      nodemailer:
-        specifier: ^8.0.9
-        version: 8.0.9
-      passport:
-        specifier: ^0.7.0
-        version: 0.7.0
-      passport-jwt:
-        specifier: ^4.0.1
-        version: 4.0.1
-      pg:
-        specifier: ^8.16.0
-        version: 8.21.0
-      react:
-        specifier: ^19.2.1
-        version: 19.2.1
-      react-day-picker:
-        specifier: ^9.11.1
-        version: 9.11.1(react@19.2.1)
-      react-dom:
-        specifier: ^19.2.1
-        version: 19.2.1(react@19.2.1)
-      react-hook-form:
-        specifier: ^7.64.0
-        version: 7.64.0(react@19.2.1)
-      react-resizable-panels:
-        specifier: ^3.0.6
-        version: 3.0.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      recharts:
-        specifier: ^2.15.2
-        version: 2.15.4(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      sonner:
-        specifier: ^2.0.7
-        version: 2.0.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      streamdown:
-        specifier: ^1.4.0
-        version: 1.4.0(@types/react@19.2.1)(react@19.2.1)
-      tailwind-merge:
-        specifier: ^3.3.1
-        version: 3.3.1
-      tailwindcss-animate:
-        specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@4.1.14)
-      vaul:
-        specifier: ^1.1.2
-        version: 1.1.2(@types/react-dom@19.2.1(@types/react@19.2.1))(@types/react@19.2.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      wouter:
-        specifier: ^3.3.5
-        version: 3.7.1(react@19.2.1)
-      ws:
-        specifier: ^8.18.0
-        version: 8.21.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      xrpl:
-        specifier: ^4.6.0
-        version: 4.6.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      xumm-sdk:
-        specifier: ^1.11.2
-        version: 1.11.2
-      zod:
-        specifier: ^3.24.1
-        version: 3.25.76
-    devDependencies:
-      '@builder.io/vite-plugin-jsx-loc':
-        specifier: ^0.1.1
-        version: 0.1.1(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.48.0)(tsx@4.20.6))
-      '@nestjs/cli':
-        specifier: ^11.0.21
-        version: 11.0.21(@types/node@24.7.0)(lightningcss@1.30.1)(postcss@8.5.6)(prettier@3.6.2)
-      '@nestjs/schematics':
-        specifier: ^11.1.0
-        version: 11.1.0(chokidar@4.0.3)(prettier@3.6.2)(typescript@5.6.3)
-      '@nestjs/testing':
-        specifier: ^11.1.24
-        version: 11.1.24(@nestjs/common@11.1.24(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.24)(@nestjs/platform-express@11.1.24)
-      '@tailwindcss/typography':
-        specifier: ^0.5.15
-        version: 0.5.19(tailwindcss@4.1.14)
-      '@tailwindcss/vite':
-        specifier: ^4.1.3
-        version: 4.1.14(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.48.0)(tsx@4.20.6))
       '@types/bcrypt':
         specifier: ^6.0.0
         version: 6.0.0
@@ -360,9 +303,39 @@ importers:
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.21(postcss@8.5.6)
+      axios:
+        specifier: ^1.12.0
+        version: 1.12.2
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      cmdk:
+        specifier: ^1.1.1
+        version: 1.1.1(@types/react-dom@19.2.1(@types/react@19.2.1))(@types/react@19.2.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       concurrently:
         specifier: ^9.1.2
         version: 9.2.1
+      embla-carousel-react:
+        specifier: ^8.6.0
+        version: 8.6.0(react@19.2.1)
+      framer-motion:
+        specifier: ^12.23.22
+        version: 12.23.22(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      input-otp:
+        specifier: ^1.4.2
+        version: 1.4.2(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      lucide-react:
+        specifier: ^0.453.0
+        version: 0.453.0(react@19.2.1)
+      nanoid:
+        specifier: ^5.1.5
+        version: 5.1.6
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       pnpm:
         specifier: ^10.15.1
         version: 10.18.1
@@ -372,15 +345,36 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
-      prisma:
-        specifier: ^6.19.2
-        version: 6.19.2(typescript@5.6.3)
+      react-day-picker:
+        specifier: ^9.11.1
+        version: 9.11.1(react@19.2.1)
+      react-hook-form:
+        specifier: ^7.64.0
+        version: 7.64.0(react@19.2.1)
+      react-resizable-panels:
+        specifier: ^3.0.6
+        version: 3.0.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      recharts:
+        specifier: ^2.15.2
+        version: 2.15.4(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      sonner:
+        specifier: ^2.0.7
+        version: 2.0.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      streamdown:
+        specifier: ^1.4.0
+        version: 1.4.0(@types/react@19.2.1)(react@19.2.1)
       supertest:
         specifier: ^7.2.2
         version: 7.2.2
+      tailwind-merge:
+        specifier: ^3.3.1
+        version: 3.3.1
       tailwindcss:
         specifier: ^4.1.14
         version: 4.1.14
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@4.1.14)
       tsx:
         specifier: ^4.19.1
         version: 4.20.6
@@ -390,6 +384,9 @@ importers:
       typescript:
         specifier: 5.6.3
         version: 5.6.3
+      vaul:
+        specifier: ^1.1.2
+        version: 1.1.2(@types/react-dom@19.2.1(@types/react@19.2.1))(@types/react@19.2.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       vite:
         specifier: ^7.1.7
         version: 7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.48.0)(tsx@4.20.6)
@@ -399,6 +396,9 @@ importers:
       vitest:
         specifier: ^4.1.7
         version: 4.1.7(@types/node@24.7.0)(vite@7.1.9(@types/node@24.7.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.48.0)(tsx@4.20.6))
+      wouter:
+        specifier: ^3.3.5
+        version: 3.7.1(react@19.2.1)
 
 packages:
 
@@ -3151,6 +3151,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@vitejs/plugin-react@5.0.4':
     resolution: {integrity: sha512-La0KD0vGkVkSk6K+piWDKRUyg8Rl5iAIKRMH0vMJI0Eg47bq1eOxmoObAaQG37WMW9MSyk7Cs8EIWwJC1PtzKA==}
@@ -5906,6 +5907,7 @@ packages:
   recharts@2.15.4:
     resolution: {integrity: sha512-UT/q6fwS3c1dHbXv2uFgYJ9BMFHu3fwnd7AYZaEQhXuYQ4hgsxLvsUXzGdKeZrW5xopzDCvuA2N41WJ88I7zIw==}
     engines: {node: '>=14'}
+    deprecated: 1.x and 2.x branches are no longer active. Bump to Recharts v3 to receive latest features and bugfixes. See https://github.com/recharts/recharts/wiki/3.0-migration-guide
     peerDependencies:
       react: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -6314,6 +6316,7 @@ packages:
   tar@7.5.1:
     resolution: {integrity: sha512-nlGpxf+hv0v7GkWBK2V9spgactGOp0qvfWRxUMjqHyzrt3SgwE48DIv/FhqPHJYLHpgW1opq3nERbz5Anq7n1g==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   terser-webpack-plugin@5.6.0:
     resolution: {integrity: sha512-Eum+5ajkaOhf5KbM26osvv21kLD7BaGqQ1UA4Ami4arYwylmGUQTgHFpHDdmJod1q4QXa66p0to/FBKID+J1vA==}

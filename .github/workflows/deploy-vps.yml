@@ -252,6 +252,15 @@ jobs:
           # shellcheck disable=SC2029
           ssh vps "DEPLOY_DIR='${DEPLOY_DIR}' bash '${DEPLOY_DIR}/scripts/vps-post-deploy.sh' promote-previous"
 
+      - name: Prune old images on VPS
+        if: always() && steps.deploy_up.outcome == 'success' && steps.verify.outcome == 'success'
+        env:
+          TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_CLIENT_ID }}
+          TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+        run: |
+          # shellcheck disable=SC2029
+          ssh vps "DEPLOY_DIR='${DEPLOY_DIR}' bash '${DEPLOY_DIR}/scripts/vps-post-deploy.sh' prune-images"
+
       - name: Cleanup deploy session
         if: always()
         env:
