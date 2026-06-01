@@ -10,6 +10,7 @@ import { Copy, Send, ArrowUpRight, ArrowDownLeft, ExternalLink, ShieldCheck, Lin
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWallet } from '@/contexts/WalletContext';
 import { walletApi, type Transaction, type XummPayload, type DepositPayload } from '@/lib/api';
 
 const XRPL_EXPLORER = 'https://testnet.xrpl.org';
@@ -31,19 +32,17 @@ export default function Wallet() {
   const xrpAddress = user?.xrpAddress ?? null;
   const isVerified = user?.verificationStatus === 'verified';
 
+  const { hasTrustLine: hasTrustLineCtx, setHasTrustLine } = useWallet();
+  const hasTrustLine = hasTrustLineCtx ?? false;
+
   const [gkcBalance, setGkcBalance] = useState<number | null>(null);
   const [xrpBalance, setXrpBalance] = useState<number | null>(null);
   const [balanceError, setBalanceError] = useState<string | null>(null);
-  const [hasTrustLine, setHasTrustLine] = useState(false);
   const isFullyReady = !!xrpAddress && isVerified && hasTrustLine;
 
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [channels, setChannels] = useState(MOCK_CHANNELS);
   const [txList, setTxList] = useState<Transaction[]>([]);
-  const [gkcIssuer, setGkcIssuer] = useState<string | null>(null);
-
-  const walletConfusedWithIssuer =
-    Boolean(xrpAddress && gkcIssuer && xrpAddress === gkcIssuer);
 
   const [bindPayload, setBindPayload] = useState<XummPayload | null>(null);
   const [bindLoading, setBindLoading] = useState(false);
@@ -78,26 +77,39 @@ export default function Wallet() {
   // Poll XUMM status while modal is open
   useEffect(() => {
     if (!xummPayload || xummSigned) return;
+    let errCount = 0;
     pollRef.current = setInterval(async () => {
       try {
         const status = await walletApi.xummStatus(token!, xummPayload.uuid);
+        errCount = 0;
         if (status.signed) {
           stopPolling();
           setXummSigned(true);
           toast.success('TrustLine 設定成功！正在發送 100 GKC 歡迎獎勵…');
-          // Wait a moment for backend to process GKC send, then refresh
           setTimeout(async () => {
             await refreshUser();
             setHasTrustLine(true);
           }, 3000);
         } else if (status.cancelled || status.expired) {
           stopPolling();
-          toast.error(status.cancelled ? '您已取消簽名' : 'Xaman 請求已過期');
+          toast.error(status.cancelled ? '您已取消簽名' : 'Xaman 請求已過期或已解除');
           setXummPayload(null);
         }
-      } catch { /* silently ignore poll errors */ }
+      } catch (err) {
+        console.error('[xumm/trustline poll]', err);
+        if (++errCount >= 5) {
+          stopPolling();
+          toast.error('無法取得 Xaman 狀態，請關閉後重新操作');
+          setXummPayload(null);
+        }
+      }
     }, 3000);
-    return stopPolling;
+    const expiryTimer = setTimeout(() => {
+      stopPolling();
+      setXummPayload(null);
+      toast.error('Xaman 請求已過期，請重新操作');
+    }, (xummPayload.expiresInSec ?? 300) * 1000);
+    return () => { stopPolling(); clearTimeout(expiryTimer); };
   }, [xummPayload, xummSigned, token, stopPolling, refreshUser]);
 
   const fetchBalance = useCallback(() => {
@@ -107,14 +119,13 @@ export default function Wallet() {
         setGkcBalance(b.gkcBalance);
         setXrpBalance(b.xrpBalance);
         setHasTrustLine(b.hasTrustLine);
-        if (b.gkcIssuerAddress) setGkcIssuer(b.gkcIssuerAddress);
         setBalanceError(b.errorMessage);
       })
       .catch(() => setBalanceError('無法連接伺服器'));
     walletApi.transactions(token)
       .then(r => setTxList(r.transactions))
       .catch(() => {});
-  }, [token]);
+  }, [token, setHasTrustLine]);
 
   useEffect(() => {
     fetchBalance();
@@ -122,48 +133,70 @@ export default function Wallet() {
 
   useEffect(() => {
     if (!rebindPayload || rebindSigned) return;
+    let errCount = 0;
     rebindPollRef.current = setInterval(async () => {
       try {
         const status = await walletApi.bindStatus(token!, rebindPayload.uuid);
+        errCount = 0;
         if (status.bound) {
           stopRebindPolling();
           setRebindSigned(true);
           toast.success('XRPL 錢包重新綁定成功！');
-          setTimeout(async () => {
-            await refreshUser();
-            fetchBalance();
-          }, 3000);
+          setTimeout(async () => { await refreshUser(); fetchBalance(); }, 3000);
         } else if (status.cancelled || status.expired) {
           stopRebindPolling();
           toast.error(status.cancelled ? '您已取消重新綁定' : '重新綁定請求已過期');
           setRebindPayload(null);
         }
-      } catch { /* silently ignore poll errors */ }
+      } catch (err) {
+        console.error('[rebind poll]', err);
+        if (++errCount >= 5) {
+          stopRebindPolling();
+          toast.error('無法取得重新綁定狀態，請關閉後重新操作');
+          setRebindPayload(null);
+        }
+      }
     }, 3000);
-    return stopRebindPolling;
+    const expiryTimer = setTimeout(() => {
+      stopRebindPolling();
+      setRebindPayload(null);
+      toast.error('重新綁定請求已過期，請重新操作');
+    }, (rebindPayload.expiresInSec ?? 300) * 1000);
+    return () => { stopRebindPolling(); clearTimeout(expiryTimer); };
   }, [rebindPayload, rebindSigned, token, stopRebindPolling, refreshUser, fetchBalance]);
 
   useEffect(() => {
     if (!bindPayload || bindSigned) return;
+    let errCount = 0;
     bindPollRef.current = setInterval(async () => {
       try {
         const status = await walletApi.bindStatus(token!, bindPayload.uuid);
+        errCount = 0;
         if (status.bound) {
           stopBindPolling();
           setBindSigned(true);
           toast.success('XRPL 錢包綁定成功！');
-          setTimeout(async () => {
-            await refreshUser();
-            fetchBalance();
-          }, 3000);
+          setTimeout(async () => { await refreshUser(); fetchBalance(); }, 3000);
         } else if (status.cancelled || status.expired) {
           stopBindPolling();
           toast.error(status.cancelled ? '您已取消綁定' : '綁定請求已過期');
           setBindPayload(null);
         }
-      } catch { /* silently ignore poll errors */ }
+      } catch (err) {
+        console.error('[bind poll]', err);
+        if (++errCount >= 5) {
+          stopBindPolling();
+          toast.error('無法取得綁定狀態，請關閉後重新操作');
+          setBindPayload(null);
+        }
+      }
     }, 3000);
-    return stopBindPolling;
+    const expiryTimer = setTimeout(() => {
+      stopBindPolling();
+      setBindPayload(null);
+      toast.error('綁定請求已過期，請重新操作');
+    }, (bindPayload.expiresInSec ?? 300) * 1000);
+    return () => { stopBindPolling(); clearTimeout(expiryTimer); };
   }, [bindPayload, bindSigned, token, stopBindPolling, refreshUser, fetchBalance]);
 
   const handleBindWallet = async () => {
@@ -200,7 +233,6 @@ export default function Wallet() {
     try {
       const payload = await walletApi.rebindWallet(token!);
       setRebindPayload(payload);
-      await refreshUser();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : '無法建立重新綁定請求';
       toast.error(msg);
@@ -261,9 +293,11 @@ export default function Wallet() {
 
   useEffect(() => {
     if (!depositPayload || depositDone) return;
+    let errCount = 0;
     depositPollRef.current = setInterval(async () => {
       try {
         const s = await walletApi.depositStatus(token!, depositPayload.uuid);
+        errCount = 0;
         if (s.status === 'completed') {
           stopDepositPolling();
           setDepositDone(true);
@@ -274,9 +308,21 @@ export default function Wallet() {
           toast.error(s.status === 'cancelled' ? '已取消充值' : '充值請求已過期');
           setDepositPayload(null);
         }
-      } catch { /* ignore */ }
+      } catch (err) {
+        console.error('[deposit poll]', err);
+        if (++errCount >= 5) {
+          stopDepositPolling();
+          toast.error('無法取得充值狀態，請關閉後重新操作');
+          setDepositPayload(null);
+        }
+      }
     }, 3000);
-    return stopDepositPolling;
+    const expiryTimer = setTimeout(() => {
+      stopDepositPolling();
+      setDepositPayload(null);
+      toast.error('充值請求已過期，請重新操作');
+    }, (depositPayload.expiresInSec ?? 300) * 1000);
+    return () => { stopDepositPolling(); clearTimeout(expiryTimer); };
   }, [depositPayload, depositDone, token, stopDepositPolling, fetchBalance]);
 
   const handleOpenDeposit = async () => {
@@ -307,6 +353,19 @@ export default function Wallet() {
     setCopiedAddress(type);
     setTimeout(() => setCopiedAddress(null), 2000);
     toast.success('已複製到剪貼板');
+  };
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      toast.info('完成錢包綁定與 TrustLine 後即可使用此功能');
+    }
+  };
+
+  const handleOpenXamanApp = () => {
+    window.open('https://xaman.app', '_blank', 'noopener,noreferrer');
   };
 
   const handleOpenChannel = async () => {
@@ -371,18 +430,6 @@ export default function Wallet() {
           </Card>
         )}
 
-        {walletConfusedWithIssuer && (
-          <Card className="border-destructive/50">
-            <CardContent className="pt-5">
-              <p className="font-semibold text-destructive">錢包地址設定錯誤</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                您目前綁定的是 <strong>GKC 發行者（Issuer）</strong> 地址，不是個人 Xaman 錢包。
-                請解除後重新綁定自己的地址，再設定 TrustLine。
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
         {/* ── TrustLine status ── */}
         {xrpAddress && !isVerified && (
           <div className="p-4 rounded-lg bg-muted/50 border border-border flex gap-3">
@@ -398,45 +445,30 @@ export default function Wallet() {
             <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
             <div className="text-sm">
               <p className="font-semibold text-foreground mb-1">GKC TrustLine 已設定 ✓</p>
-              <p className="text-muted-foreground">
-                {gkcIssuer ? (
-                  <>
-                    GKC 發行者: <code className="font-mono">{gkcIssuer.slice(0, 20)}…</code>
-                    {' · '}
-                    <a href={`${XRPL_EXPLORER}/accounts/${gkcIssuer}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-0.5">
-                      查看 Issuer <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </>
-                ) : 'GKC 發行者地址由後端設定。'}
-              </p>
+              <p className="text-muted-foreground">您的錢包已完成 GKC 信任線設定，可正常接收與使用 GKC。</p>
             </div>
           </div>
         )}
         {xrpAddress && isVerified && !hasTrustLine && (
-          <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-start gap-3">
-            <ShieldCheck className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
-            <div className="text-sm flex-1">
-              <p className="font-semibold text-foreground mb-1">GKC TrustLine 尚未設定</p>
-              <p className="text-muted-foreground">
-                {gkcIssuer ? (
-                  <>
-                    GKC 發行者: <code className="font-mono">{gkcIssuer.slice(0, 20)}…</code>
-                    {' · '}
-                    <a href={`${XRPL_EXPLORER}/accounts/${gkcIssuer}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-0.5">
-                      查看 Issuer <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </>
-                ) : 'GKC 發行者地址由後端設定（請確認 GKC_ISSUER_ADDRESS）。'}
-                {!walletConfusedWithIssuer && <span className="text-yellow-600 ml-1">設定後可獲得 100 GKC 歡迎獎勵。</span>}
-              </p>
-            </div>
-            {!walletConfusedWithIssuer && (
-              <Button size="sm" onClick={handleOpenXumm} disabled={xummLoading} className="gap-2 shrink-0">
-                {xummLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4" />}
-                用 Xaman 設定
-              </Button>
-            )}
-          </div>
+          <Card className="border-yellow-500/50">
+            <CardContent className="pt-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-yellow-500/15 text-yellow-500 shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <p className="font-semibold">設定 GKC TrustLine</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">設定後即可接收 GKC，並獲得 100 GKC 歡迎獎勵</p>
+                  </div>
+                  <Button variant="outline" onClick={handleOpenXumm} disabled={xummLoading} size="sm" className="gap-2">
+                    {xummLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4" />}
+                    用 Xaman 掃碼設定
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* ── XUMM QR Modal ── */}
@@ -553,7 +585,7 @@ export default function Wallet() {
 
         {/* ── Deposit: XRP → GKC ── */}
         {isFullyReady && (
-          <Card>
+          <Card id="deposit-section">
             <CardContent className="pt-5">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary/15 text-primary shrink-0">
@@ -629,118 +661,97 @@ export default function Wallet() {
           </DialogContent>
         </Dialog>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* GKC 主錢包 */}
-          <div className="relative">
-            {!isFullyReady && <div className="absolute inset-0 bg-background/60 rounded-xl z-10 pointer-events-auto" />}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 餘額總覽：GKC + XRP（純資訊呈現，不需鎖定） */}
+          <div>
             <Card className="border-2 border-primary/20 h-full">
-              <CardContent className="pt-6 h-full">
-                <div className="flex gap-4 h-full">
-                  {/* Left: monitor */}
-                  <div className="flex-1 space-y-4 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">高科幣 (GKC)</span>
-                      <Badge>主錢包</Badge>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">可用餘額</p>
-                      {gkcBalance !== null ? (
-                        <p className="text-4xl font-bold tabular-nums">{gkcBalance.toLocaleString()}</p>
-                      ) : (
-                        <p className="text-2xl font-bold text-muted-foreground">無法取得</p>
-                      )}
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-                      <p className="text-xs text-muted-foreground">XRPL 地址（接收 GKC）</p>
-                      {walletConfusedWithIssuer && (
-                        <p className="text-xs text-destructive">此為發行者地址，請改綁個人地址</p>
-                      )}
-                      <div className="flex items-center gap-1">
-                        <code className="text-xs font-mono flex-1 truncate">{xrpAddress ?? '—'}</code>
-                        <button onClick={() => xrpAddress && copyToClipboard(xrpAddress, 'gkc')} disabled={!xrpAddress} className="p-1.5 hover:bg-muted rounded transition-colors disabled:opacity-40">
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                        {xrpAddress && (
-                          <a href={`${XRPL_EXPLORER}/accounts/${xrpAddress}`} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-muted rounded transition-colors text-primary">
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
+              <CardContent className="p-6 h-full flex flex-col">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">高科幣 (GKC)</p>
+                    {gkcBalance !== null ? (
+                      <p className="text-5xl font-bold tabular-nums mt-2">{gkcBalance.toLocaleString()}</p>
+                    ) : (
+                      <p className="text-2xl font-bold text-muted-foreground mt-2">—</p>
+                    )}
                   </div>
-                  {/* Right: operations */}
-                  <div className="flex flex-col gap-2 shrink-0 w-28 border-l pl-4">
-                    <p className="text-xs text-muted-foreground font-medium mb-1">操作</p>
-                    <Button variant="outline" size="sm" className="gap-2 w-full justify-start" disabled={!isFullyReady}>
-                      <ArrowDownLeft className="w-4 h-4" /> 充值
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-2 w-full justify-start" disabled={!isFullyReady}>
-                      <ArrowUpRight className="w-4 h-4" /> 提現
-                    </Button>
-                    {xrpAddress && (
-                      <Button variant="destructive" size="sm" onClick={handleUnbindWallet} disabled={unbindLoading} className="gap-2 w-full justify-start mt-auto">
-                        {unbindLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
-                        解除綁定
-                      </Button>
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">XRP</p>
+                    {xrpBalance !== null ? (
+                      <p className="text-5xl font-bold tabular-nums mt-2">{xrpBalance.toLocaleString()}</p>
+                    ) : (
+                      <p className="text-2xl font-bold text-muted-foreground mt-2">—</p>
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* XRP 結算層 */}
-          <div className="relative">
-            {!isFullyReady && <div className="absolute inset-0 bg-background/60 rounded-xl z-10 pointer-events-auto" />}
-            <Card className="h-full">
-              <CardContent className="pt-6 h-full">
-                <div className="flex gap-4 h-full">
-                  {/* Left: monitor */}
-                  <div className="flex-1 space-y-4 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">XRP Ledger</span>
-                      <Badge variant="outline">結算層</Badge>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">可用餘額</p>
-                      {xrpBalance !== null ? (
-                        <p className="text-4xl font-bold tabular-nums">{xrpBalance.toLocaleString()}</p>
-                      ) : (
-                        <p className="text-2xl font-bold text-muted-foreground">無法取得</p>
-                      )}
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-                      <p className="text-xs text-muted-foreground">XRP 地址</p>
-                      <div className="flex items-center gap-1">
-                        <code className="text-xs font-mono flex-1 truncate">{xrpAddress ?? '—'}</code>
-                        <button onClick={() => xrpAddress && copyToClipboard(xrpAddress, 'xrp')} disabled={!xrpAddress} className="p-1.5 hover:bg-muted rounded transition-colors disabled:opacity-40">
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                        {xrpAddress && (
-                          <a href={`${XRPL_EXPLORER}/accounts/${xrpAddress}`} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-muted rounded transition-colors text-primary">
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Right: operations */}
-                  <div className="flex flex-col gap-2 shrink-0 w-28 border-l pl-4">
-                    <p className="text-xs text-muted-foreground font-medium mb-1">操作</p>
-                    <Button variant="outline" size="sm" className="gap-2 w-full justify-start" disabled={!isFullyReady}>
-                      <ArrowDownLeft className="w-4 h-4" /> 充值
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-2 w-full justify-start" disabled={!isFullyReady}>
-                      <Send className="w-4 h-4" /> 轉賬
-                    </Button>
-                  </div>
+                <p className="text-xs text-muted-foreground mt-3">可用餘額</p>
+                <div className="mt-auto pt-4 border-t flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground shrink-0">錢包綁定地址</span>
+                  <code className="text-xs font-mono flex-1 truncate">{xrpAddress ?? '—'}</code>
+                  <button
+                    onClick={() => xrpAddress && copyToClipboard(xrpAddress, 'wallet')}
+                    disabled={!xrpAddress}
+                    className="text-xs text-primary hover:underline disabled:opacity-40 inline-flex items-center gap-1 shrink-0"
+                  >
+                    <Copy className="w-3.5 h-3.5" /> {copiedAddress === 'wallet' ? '已複製' : '複製'}
+                  </button>
+                  {xrpAddress && (
+                    <a href={`${XRPL_EXPLORER}/accounts/${xrpAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-muted rounded transition-colors text-primary shrink-0">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* 功能操作 + 快速跳轉 */}
+          <Card className="h-full">
+            <CardContent className="p-6 h-full">
+              <div className="grid grid-cols-2 gap-4 h-full">
+                {/* 功能操作 */}
+                <div className="space-y-3">
+                  <p className="font-semibold">功能操作</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRebindWallet}
+                    disabled={!xrpAddress || rebindLoading}
+                    className="gap-2 w-full justify-start"
+                  >
+                    {rebindLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+                    重新綁定錢包
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleUnbindWallet}
+                    disabled={!xrpAddress || unbindLoading}
+                    className="gap-2 w-full justify-start"
+                  >
+                    {unbindLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                    解除錢包綁定
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleOpenXamanApp} className="gap-2 w-full justify-start text-xs">
+                    <Smartphone className="w-4 h-4 shrink-0" /> 開啟 XUMM 錢包
+                  </Button>
+                </div>
+                {/* 快速跳轉 */}
+                <div className="space-y-3 border-l pl-4">
+                  <p className="font-semibold">快速跳轉</p>
+                  <Button variant="outline" size="sm" onClick={() => scrollToSection('deposit-section')} className="gap-2 w-full justify-start">
+                    <ArrowDownLeft className="w-4 h-4" /> 充值高科幣
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => scrollToSection('swap-section')} className="gap-2 w-full justify-start">
+                    <ArrowUpRight className="w-4 h-4" /> 高科幣兌換
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="relative">
+        <div className="relative" id="swap-section">
           {!isFullyReady && <div className="absolute inset-0 bg-background/60 rounded-xl z-10 pointer-events-auto" />}
           <Card>
           <CardHeader>
@@ -798,17 +809,6 @@ export default function Wallet() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">24h 交易量</span>
                 <span>38,400 GKC</span>
-              </div>
-              <div className="flex justify-between border-t pt-1.5">
-                <span className="text-muted-foreground">AMM 帳本</span>
-                <a
-                  href={gkcIssuer ? `${XRPL_EXPLORER}/amm/GKC+${gkcIssuer}/XRP` : '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline flex items-center gap-1"
-                >
-                  查看 AMM 池 <ExternalLink className="w-3 h-3" />
-                </a>
               </div>
             </div>
 

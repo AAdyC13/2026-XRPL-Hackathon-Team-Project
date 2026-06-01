@@ -31,17 +31,6 @@ interface AuthContextValue {
   setTheme: (theme: 'light' | 'dark') => void;
 }
 
-const MOCK_USER: AuthUser = {
-  id: 'usr-001',
-  username: 'demo_user_1',
-  email: 'demo_user_1@gkc.edu.tw',
-  role: 'node_owner',
-  xrpAddress: 'rN7n7otQDd6FczFgLdlqtyMVrn3Rqq5Q1',
-  theme: 'light',
-  gkcBalance: 2847.52,
-  xrpBalance: 128.50,
-};
-
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -136,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('gkc_token');
   };
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     const t = token ?? localStorage.getItem('gkc_token');
     if (!t) return;
     const u = await authApi.me(t);
@@ -149,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       verificationStatus: u.verificationStatus,
       theme: u.theme ?? 'light',
     });
-  };
+  }, [token]);
 
   const setTheme = useCallback((theme: 'light' | 'dark') => {
     if (!user) return;

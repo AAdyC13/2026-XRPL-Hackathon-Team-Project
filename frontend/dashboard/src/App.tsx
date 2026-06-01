@@ -5,6 +5,7 @@ import { Route, Switch, Redirect, Router } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { WalletProvider } from "@/contexts/WalletContext";
 import Dashboard from "./pages/Dashboard";
 import AIInference from "./pages/AIInference";
 import Wallet from "./pages/Wallet";
@@ -69,6 +70,7 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
+        <WalletProvider>
         <ThemeProvider>
           <TooltipProvider>
             <Toaster />
@@ -77,6 +79,7 @@ function App() {
             </Router>
           </TooltipProvider>
         </ThemeProvider>
+        </WalletProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

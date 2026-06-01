@@ -194,6 +194,7 @@ compose_up() {
   docker image prune -f >/dev/null 2>&1 || true
   docker builder prune -f >/dev/null 2>&1 || true
   compose_cmd pull
+  compose_cmd run --rm app pnpm db:deploy
   compose_cmd up -d --remove-orphans
 }
 
