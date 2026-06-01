@@ -36,6 +36,7 @@
     "@adminjs/design-system": "^4.1.1",
     "@adminjs/express": "^6.1.1",
     "@adminjs/prisma": "^5.0.4",
+    "@babel/plugin-syntax-import-assertions": "^7.29.7",
     "@nestjs/common": "^11.1.24",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.24",
@@ -70,7 +71,6 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@babel/plugin-syntax-import-assertions": "^7.29.7",
     "@builder.io/vite-plugin-jsx-loc": "^0.1.1",
     "@hookform/resolvers": "^5.2.2",
     "@nestjs/cli": "^11.0.21",
