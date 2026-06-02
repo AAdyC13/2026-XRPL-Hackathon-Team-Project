@@ -3,10 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Copy, Send, ArrowUpRight, ArrowDownLeft, ExternalLink, ShieldCheck, Link2, Plus, X, Loader2, QrCode, Smartphone, Clock } from 'lucide-react';
+import { Copy, Send, ArrowUpRight, ArrowDownLeft, ExternalLink, ShieldCheck, Link2, X, Loader2, QrCode, Smartphone, Clock } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +27,7 @@ const MOCK_CHANNELS = [
 ];
 
 export default function Wallet() {
-  const { user, token, refreshUser } = useAuth();
+  const { user, token, refreshUser, isDemoAccount } = useAuth();
   const xrpAddress = user?.xrpAddress ?? null;
   const isVerified = user?.verificationStatus === 'verified';
 
@@ -228,6 +227,7 @@ export default function Wallet() {
   };
 
   const handleRebindWallet = async () => {
+    if (isDemoAccount) { toast.error('Demo 帳號無法使用此功能'); return; }
     setRebindLoading(true);
     setRebindSigned(false);
     try {
@@ -242,6 +242,7 @@ export default function Wallet() {
   };
 
   const handleUnbindWallet = async () => {
+    if (isDemoAccount) { toast.error('Demo 帳號無法使用此功能'); return; }
     if (!xrpAddress) return;
     const confirmed = window.confirm('解除綁定會凍結 TrustLine，且要求 GKC 餘額為 0。確定要解除嗎？');
     if (!confirmed) return;
@@ -346,8 +347,6 @@ export default function Wallet() {
     setDepositDone(false);
   };
 
-  const [isOpeningChannel, setIsOpeningChannel] = useState(false);
-
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
     setCopiedAddress(type);
@@ -368,28 +367,6 @@ export default function Wallet() {
     window.open('https://xaman.app', '_blank', 'noopener,noreferrer');
   };
 
-  const handleOpenChannel = async () => {
-    setIsOpeningChannel(true);
-    // TODO: 替換為真實 API 呼叫 — POST /api/v1/payment-channel/open
-    await new Promise((r) => setTimeout(r, 1200));
-    const newChannel = {
-      id: 'ch-' + Date.now(),
-      channelId: Array.from({ length: 40 }, () => '0123456789ABCDEF'[Math.floor(Math.random() * 16)]).join(''),
-      lockedXrp: 20,
-      consumedXrp: 0,
-      status: 'open' as const,
-      expiration: new Date(Date.now() + 86400000 * 7),
-    };
-    setChannels((prev) => [...prev, newChannel]);
-    setIsOpeningChannel(false);
-    toast.success('Payment Channel 已開啟，鎖定 20 XRP');
-  };
-
-  const handleCloseChannel = (id: string) => {
-    // TODO: 替換為真實 API 呼叫 — POST /api/v1/payment-channel/close
-    setChannels((prev) => prev.filter((c) => c.id !== id));
-    toast.success('通道已關閉，未消費的 XRP 已退回');
-  };
 
   return (
     <Layout>
@@ -716,7 +693,8 @@ export default function Wallet() {
                     variant="outline"
                     size="sm"
                     onClick={handleRebindWallet}
-                    disabled={!xrpAddress || rebindLoading}
+                    disabled={!xrpAddress || rebindLoading || isDemoAccount}
+                    title={isDemoAccount ? 'Demo 帳號無法使用此功能' : undefined}
                     className="gap-2 w-full justify-start"
                   >
                     {rebindLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
@@ -726,7 +704,8 @@ export default function Wallet() {
                     variant="outline"
                     size="sm"
                     onClick={handleUnbindWallet}
-                    disabled={!xrpAddress || unbindLoading}
+                    disabled={!xrpAddress || unbindLoading || isDemoAccount}
+                    title={isDemoAccount ? 'Demo 帳號無法使用此功能' : undefined}
                     className="gap-2 w-full justify-start"
                   >
                     {unbindLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
@@ -812,93 +791,71 @@ export default function Wallet() {
               </div>
             </div>
 
-            <Button className="w-full mt-4">確認兌換</Button>
+            <Button className="w-full mt-4" disabled>確認兌換</Button>
           </CardContent>
         </Card>
         </div>
 
-        {/* Payment Channel 管理 */}
+        {/* 代繳帳單 */}
         <div className="relative">
           {!isFullyReady && <div className="absolute inset-0 bg-background/60 rounded-xl z-10 pointer-events-auto" />}
           <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Link2 className="w-5 h-5" />
-                  Payment Channel
-                </CardTitle>
-                <CardDescription className="mt-1">AI 推論 per-token 微支付通道</CardDescription>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-2"
-                onClick={handleOpenChannel}
-                disabled={isOpeningChannel}
-              >
-                {isOpeningChannel ? (
-                  <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Plus className="w-4 h-4" />
-                )}
-                開啟新通道
-              </Button>
-            </div>
+            <CardTitle className="flex items-center gap-2">
+              <Link2 className="w-5 h-5" />
+              代繳帳單
+            </CardTitle>
+            <CardDescription className="mt-1">AI 推論各供應商代繳 Check</CardDescription>
           </CardHeader>
           <CardContent>
             {channels.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">
-                尚無開啟的 Payment Channel
+                尚無代繳帳單記錄
               </p>
             ) : (
               <div className="space-y-3">
-                {channels.map((ch) => (
-                  <div
-                    key={ch.id}
-                    className="p-4 rounded-lg border space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                          {ch.channelId.slice(0, 16)}...
-                        </code>
-                        <a
-                          href={`${XRPL_EXPLORER}/transactions/${ch.channelId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-primary hover:underline flex items-center gap-1"
-                        >
-                          鏈上查詢 <ExternalLink className="w-3 h-3" />
-                        </a>
+                {channels.map((ch) => {
+                  const msLeft = ch.expiration.getTime() - Date.now();
+                  const daysLeft = Math.max(0, Math.floor(msLeft / 86400000));
+                  const hoursLeft = Math.max(0, Math.floor((msLeft % 86400000) / 3600000));
+                  const timeLabel = msLeft <= 0 ? '已到期' : `${daysLeft}天${hoursLeft}小時`;
+                  return (
+                    <div
+                      key={ch.id}
+                      className="p-4 rounded-lg border space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                            {ch.channelId.slice(0, 16)}...
+                          </code>
+                          <a
+                            href={`${XRPL_EXPLORER}/transactions/${ch.channelId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                          >
+                            鏈上查詢 <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleCloseChannel(ch.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <div className="grid grid-cols-3 gap-3 text-sm">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Token 總消耗</p>
+                          <p className="font-semibold">{ch.lockedXrp.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">GKC 換算</p>
+                          <p className="font-semibold text-destructive">{ch.consumedXrp} GKC</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">到期日剩餘</p>
+                          <p className="font-semibold text-accent">{timeLabel}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-3 text-sm">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">鎖定</p>
-                        <p className="font-semibold">{ch.lockedXrp} XRP</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">已消費</p>
-                        <p className="font-semibold text-destructive">{ch.consumedXrp} XRP</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">剩餘</p>
-                        <p className="font-semibold text-accent">{(ch.lockedXrp - ch.consumedXrp).toFixed(1)} XRP</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">{ch.status === 'open' ? '開啟中' : '結算中'}</Badge>
-                      <span>到期: {ch.expiration.toLocaleDateString('zh-TW')}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
