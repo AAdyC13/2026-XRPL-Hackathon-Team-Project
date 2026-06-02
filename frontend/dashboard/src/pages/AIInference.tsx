@@ -204,7 +204,7 @@ export default function AIInference() {
           maxConcurrent: p.max_concurrent,
           uptime30d: p.uptime_30d * 100,
           avgRating: p.avg_rating,
-          status: p.status === 'online' || p.status === 'verified' ? 'online' : 'offline',
+          status: (p.status === 'online' || p.status === 'verified' ? 'online' : 'offline') as Provider['status'],
         }));
         setProviders(mapped.length > 0 ? mapped : MOCK_PROVIDERS);
       })
