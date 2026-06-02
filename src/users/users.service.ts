@@ -23,13 +23,15 @@ export class UsersService {
     email: string;
     passwordHash: string;
     xrpAddress?: string;
+    verificationStatus?: string;
   }): Promise<User> {
     return this.prisma.user.create({
       data: {
         username: input.username,
         email: input.email,
         passwordHash: input.passwordHash,
-        xrpAddress: input.xrpAddress
+        xrpAddress: input.xrpAddress,
+        verificationStatus: input.verificationStatus
       }
     });
   }

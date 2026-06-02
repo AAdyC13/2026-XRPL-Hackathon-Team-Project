@@ -19,7 +19,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const { theme, setTheme } = useTheme();
-  const { user, token, logout, refreshUser } = useAuth();
+  const { user, token, logout, refreshUser, isDemoAccount } = useAuth();
   const { hasTrustLine, fetchTrustLine } = useWallet();
   const [location, navigate] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -126,6 +126,11 @@ export default function Layout({ children }: LayoutProps) {
             <ShieldAlert className="w-3 h-3" /> TrustLine
           </Link>
         )}
+        {isDemoAccount && (
+          <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-full px-2 py-0.5 shrink-0">
+            Demo
+          </span>
+        )}
         {user && (
           <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
             {user.username.slice(0, 1).toUpperCase()}
@@ -208,6 +213,12 @@ export default function Layout({ children }: LayoutProps) {
         )}
 
         <div className="p-4 border-t border-border space-y-1">
+          {isDemoAccount && (
+            <div className="mb-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5">
+              <p className="text-xs font-semibold text-amber-600">Demo 帳號</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">部分功能已被停用</p>
+            </div>
+          )}
           <NavLink href={ROUTES.WALLET} icon={<Wallet className="w-5 h-5" />} label="我的錢包" onNavigate={closeSidebar} />
           <NavLink href={ROUTES.ACCOUNT_SETTINGS} icon={<Settings className="w-5 h-5" />} label="帳號設定" onNavigate={closeSidebar} />
 

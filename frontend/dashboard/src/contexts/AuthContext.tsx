@@ -15,6 +15,7 @@ export interface AuthUser {
   xrpAddress: string | null;
   verificationStatus?: 'pending' | 'verified' | 'rejected';
   theme: 'light' | 'dark';
+  isActive: boolean;
   gkcBalance?: number;
   xrpBalance?: number;
 }
@@ -24,6 +25,7 @@ interface AuthContextValue {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isDemoAccount: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -53,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             xrpAddress: u.xrpAddress ?? null,
             verificationStatus: u.verificationStatus,
             theme: u.theme ?? 'light',
+            isActive: u.isActive ?? true,
           });
         })
         .catch(() => {
@@ -79,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         xrpAddress: u.xrpAddress ?? null,
         verificationStatus: u.verificationStatus,
         theme: u.theme ?? 'light',
+        isActive: u.isActive ?? true,
       });
     } catch {
       setUser({
@@ -89,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         xrpAddress: res.user.xrpAddress ?? null,
         verificationStatus: res.user.verificationStatus,
         theme: res.user.theme ?? 'light',
+        isActive: res.user.isActive ?? true,
       });
     }
   };
@@ -113,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: res.user.role as AuthUser['role'],
       xrpAddress: res.user.xrpAddress ?? null,
       theme: 'light',
+      isActive: res.user.isActive ?? true,
     };
     setToken(res.token);
     setUser(authUser);
@@ -137,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       xrpAddress: u.xrpAddress ?? null,
       verificationStatus: u.verificationStatus,
       theme: u.theme ?? 'light',
+      isActive: u.isActive ?? true,
     });
   }, [token]);
 
@@ -147,9 +154,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (t) authApi.updatePreferences(t, theme).catch(() => {});
   }, [user, token]);
 
+  const isDemoAccount = user !== null && !user.isActive;
+
   return (
     <AuthContext.Provider
-      value={{ user, token, isAuthenticated: !!token, isLoading, login, register, logout, refreshUser, setTheme }}
+      value={{ user, token, isAuthenticated: !!token, isLoading, isDemoAccount, login, register, logout, refreshUser, setTheme }}
     >
       {children}
     </AuthContext.Provider>

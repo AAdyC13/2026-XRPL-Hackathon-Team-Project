@@ -30,9 +30,10 @@ const revenueData = [
 ];
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const gkcDisplay = '—';
-  const xrpDisplay = '—';
+  const { user, isDemoAccount } = useAuth();
+  const gkcDisplay = isDemoAccount ? '100' : '—';
+  const xrpDisplay = isDemoAccount ? '200' : '—';
+  const monthlyRevenueDisplay = isDemoAccount ? '300' : '—';
 
   const showWalletBanner = user?.verificationStatus === 'verified' && !user?.xrpAddress;
 
@@ -89,7 +90,7 @@ export default function Dashboard() {
           />
           <StatCard
             title="本月收益"
-            value="—"
+            value={monthlyRevenueDisplay}
             unit="GKC"
             icon={<ArrowUpRight className="w-5 h-5" />}
             trend="待統計 API"

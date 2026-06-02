@@ -28,8 +28,8 @@ async function request<T>(
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };
-    throw new ApiError(res.status, body.error ?? res.statusText);
+    const body = await res.json().catch(() => ({})) as { message?: string; error?: string };
+    throw new ApiError(res.status, body.message ?? body.error ?? res.statusText);
   }
   return res.json() as Promise<T>;
 }
@@ -46,6 +46,7 @@ export interface LoginResponse {
     verificationStatus?: 'pending' | 'verified' | 'rejected';
     xrpAddress: string | null;
     theme?: 'light' | 'dark';
+    isActive?: boolean;
   };
 }
 

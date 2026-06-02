@@ -23,6 +23,7 @@ export class AuthService {
     role: string;
     xrpAddress: string | null;
     verificationStatus: string;
+    isActive: boolean;
   }): AuthUserProfile {
     return {
       id: user.id,
@@ -31,6 +32,7 @@ export class AuthService {
       role: user.role,
       xrpAddress: user.xrpAddress,
       verificationStatus: user.verificationStatus,
+      isActive: user.isActive,
     };
   }
 
@@ -66,18 +68,23 @@ export class AuthService {
     const user = await this.usersService.createUser({
       username: input.username,
       email: input.email,
-      passwordHash
+      passwordHash,
+      verificationStatus: "verified"
     });
 
     const token = await this.buildToken(user.id, user.role);
 
     return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
       token,
-      verificationStatus: "pending",
-      message: "帳號已建立，等待管理員審核。"
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        xrpAddress: user.xrpAddress,
+        verificationStatus: user.verificationStatus,
+        isActive: user.isActive,
+      }
     };
   }
 

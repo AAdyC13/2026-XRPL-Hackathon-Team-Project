@@ -13,10 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, User, KeyRound } from 'lucide-react';
+import { Loader2, User, KeyRound, ShieldAlert } from 'lucide-react';
 
 export default function AccountSettings() {
-  const { user, token, refreshUser } = useAuth();
+  const { user, token, refreshUser, isDemoAccount } = useAuth();
 
   // ── 修改帳號名稱 ──────────────────────────────────────────────
   const [username, setUsername] = useState(user?.username ?? '');
@@ -24,6 +24,7 @@ export default function AccountSettings() {
 
   const handleUpdateUsername = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDemoAccount) { toast.error('Demo 帳號無法修改帳號名稱'); return; }
     if (!token) return;
     if (username === user?.username) {
       toast.info('帳號名稱未變更');
@@ -54,6 +55,7 @@ export default function AccountSettings() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDemoAccount) { toast.error('Demo 帳號無法修改密碼'); return; }
     if (!token) return;
     if (!currentPassword) {
       toast.error('請輸入目前密碼');
@@ -90,6 +92,16 @@ export default function AccountSettings() {
       <div className="p-8 max-w-xl space-y-6">
         <h1 className="hidden lg:block text-2xl font-bold">帳號設定</h1>
 
+        {isDemoAccount && (
+          <div className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3">
+            <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-amber-600">Demo 帳號</p>
+              <p className="text-xs text-muted-foreground mt-0.5">修改帳號名稱與密碼已停用，如需完整功能請聯繫管理員</p>
+            </div>
+          </div>
+        )}
+
         {/* 修改帳號名稱 */}
         <Card>
           <CardHeader>
@@ -108,12 +120,13 @@ export default function AccountSettings() {
                   onChange={e => setUsername(e.target.value)}
                   placeholder="輸入新的帳號名稱"
                   autoComplete="username"
+                  disabled={isDemoAccount}
                 />
               </div>
               <div className="space-y-1 text-xs text-muted-foreground">
                 <p>Email：{user?.email}</p>
               </div>
-              <Button type="submit" disabled={usernameLoading} className="w-full">
+              <Button type="submit" disabled={usernameLoading || isDemoAccount} className="w-full">
                 {usernameLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 儲存名稱
               </Button>
@@ -140,6 +153,7 @@ export default function AccountSettings() {
                   onChange={e => setCurrentPassword(e.target.value)}
                   placeholder="輸入目前密碼"
                   autoComplete="current-password"
+                  disabled={isDemoAccount}
                 />
               </div>
               <div className="space-y-1.5">
@@ -151,6 +165,7 @@ export default function AccountSettings() {
                   onChange={e => setNewPassword(e.target.value)}
                   placeholder="輸入新密碼"
                   autoComplete="new-password"
+                  disabled={isDemoAccount}
                 />
               </div>
               <div className="space-y-1.5">
@@ -162,9 +177,10 @@ export default function AccountSettings() {
                   onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="再次輸入新密碼"
                   autoComplete="new-password"
+                  disabled={isDemoAccount}
                 />
               </div>
-              <Button type="submit" disabled={passwordLoading} className="w-full">
+              <Button type="submit" disabled={passwordLoading || isDemoAccount} className="w-full">
                 {passwordLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 更新密碼
               </Button>

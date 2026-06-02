@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Zap, Mail, Lock, User, Clock } from 'lucide-react';
+import { Zap, Mail, Lock, User, CheckCircle } from 'lucide-react';
 import { ROUTES } from '@/lib/constants';
 import { ACCOUNT_POLICY_MESSAGES_ZH } from '@/policies/account-policy';
 
@@ -49,15 +49,15 @@ export default function Register() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-yellow-500" />
+                <CheckCircle className="w-6 h-6 text-green-500" />
                 <CardTitle className="text-xl">帳戶已建立</CardTitle>
               </div>
-              <CardDescription>等待管理員審核</CardDescription>
+              <CardDescription>註冊成功</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="p-4 rounded-lg bg-muted/50 text-sm space-y-2">
-                <p className="font-medium">您的帳號目前正在等待管理員審核</p>
-                <p className="text-muted-foreground">審核通過後，您將可以連接 Xaman 錢包並使用所有功能。</p>
+                <p className="font-medium">您的帳號已成功建立並通過審核</p>
+                <p className="text-muted-foreground">您現在可以連接 Xaman 錢包並使用所有功能。</p>
               </div>
               <Button className="w-full" onClick={() => navigate(ROUTES.DASHBOARD)}>
                 前往 Dashboard
@@ -129,6 +129,7 @@ export default function Register() {
                   <Input
                     id="password"
                     type="password"
+                    autoComplete="new-password"
                     placeholder="至少 8 個字元，含大小寫與數字"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -146,6 +147,7 @@ export default function Register() {
                   <Input
                     id="confirmPassword"
                     type="password"
+                    autoComplete="new-password"
                     placeholder="再次輸入密碼"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}

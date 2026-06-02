@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'wouter';
+import { useLocation } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,9 +97,9 @@ export default function Login() {
 
             <p className="mt-4 text-center text-sm text-muted-foreground">
               還沒有帳戶？{' '}
-              <Link href={ROUTES.REGISTER} className="text-primary hover:underline font-medium">
+              <button type="button" className="text-primary hover:underline font-medium cursor-pointer">
                 立即註冊
-              </Link>
+              </button>
             </p>
 
             <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20 text-xs text-center space-y-1">

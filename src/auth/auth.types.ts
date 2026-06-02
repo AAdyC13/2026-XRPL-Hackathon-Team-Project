@@ -5,6 +5,7 @@ export type AuthUserProfile = {
   role: string;
   xrpAddress: string | null;
   verificationStatus: string;
+  isActive: boolean;
 };
 
 export type JwtPayload = {
