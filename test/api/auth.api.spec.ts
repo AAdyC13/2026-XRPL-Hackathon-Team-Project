@@ -26,11 +26,11 @@ describe("Auth API", () => {
     });
 
     expect([200, 201]).toContain(response.status);
-    expect(response.body).toMatchObject({
+    expect(typeof response.body.token).toBe("string");
+    expect(response.body.user).toMatchObject({
       username: "new_user_01",
       email: "new_user_01@example.com"
     });
-    expect(typeof response.body.token).toBe("string");
   });
 
   it("rejects weak password on register", async () => {
